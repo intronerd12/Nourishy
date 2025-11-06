@@ -1,0 +1,115 @@
+/* Sharp, professional card with green accent theme */
+.admin-orders-card {
+  border: 1px solid rgba(16, 185, 129, 0.15); /* emerald-500 */
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.admin-orders-header {
+  background: linear-gradient(135deg, #10b981, #059669); /* emerald-500 -> emerald-600 */
+  color: #fff;
+  border-bottom: none;
+}
+
+.admin-refresh-btn {
+  border: none;
+  color: #064e3b;
+  background-color: #ecfdf5; /* emerald-50 */
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+.admin-refresh-btn:hover {
+  background-color: #d1fae5; /* emerald-100 */
+}
+
+/* Table styling with subtle green touches */
+.admin-orders-table thead tr {
+  background-color: #f0fdf4; /* emerald-50 */
+}
+.admin-orders-table thead th {
+  border: none;
+  color: #065f46; /* emerald-800 */
+  font-weight: 600;
+}
+
+.admin-orders-table tbody tr:hover {
+  background-color: #f7fdf9;
+}
+
+.items-badge {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-weight: 600;
+}
+
+.status-select {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.status-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+}
+
+/* Tighten table spacing slightly for a sharp look */
+.admin-orders-table td,
+.admin-orders-table th {
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+/* Colored status chips and select variants */
+.status-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-select.status-pending {
+  border-color: #f59e0b;
+}
+.status-chip.status-pending {
+  background-color: #fffbeb; /* amber-50 */
+  color: #92400e; /* amber-800 */
+  border-color: #f59e0b;
+}
+
+.status-select.status-confirmed {
+  border-color: #10b981;
+}
+.status-chip.status-confirmed {
+  background-color: #ecfdf5; /* emerald-50 */
+  color: #065f46; /* emerald-800 */
+  border-color: #10b981;
+}
+
+.status-select.status-cancelled {
+  border-color: #ef4444;
+}
+.status-chip.status-cancelled {
+  background-color: #fee2e2; /* red-100 */
+  color: #7f1d1d; /* red-900 */
+  border-color: #ef4444;
+}
+
+.status-select.status-delivered {
+  border-color: #3b82f6;
+}
+.status-chip.status-delivered {
+  background-color: #eff6ff; /* blue-50 */
+  color: #1e40af; /* blue-800 */
+  border-color: #3b82f6;
+}
+
+.status-select.status-neutral {
+  border-color: rgba(0,0,0,0.15);
+}
+.status-chip.status-neutral {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: rgba(0,0,0,0.15);
+}

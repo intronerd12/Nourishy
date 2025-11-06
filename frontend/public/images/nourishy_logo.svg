@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60">
+  <defs>
+    <!-- Gradient for the shampoo bottle -->
+    <linearGradient id="bottleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Gradient for the cap -->
+    <linearGradient id="capGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#374151;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1f2937;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Text gradient -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="200" height="60" fill="#ffffff"/>
+  
+  <!-- Shampoo Bottle Icon -->
+  <g transform="translate(8, 8)">
+    <!-- Bottle Body -->
+    <path d="M8 15 L8 40 Q8 42 10 42 L18 42 Q20 42 20 40 L20 15 Z" 
+          fill="url(#bottleGradient)" 
+          stroke="#047857" 
+          stroke-width="0.5"/>
+    
+    <!-- Bottle Neck -->
+    <rect x="10" y="10" width="8" height="8" 
+          fill="url(#bottleGradient)" 
+          stroke="#047857" 
+          stroke-width="0.5"/>
+    
+    <!-- Bottle Cap -->
+    <ellipse cx="14" cy="8" rx="6" ry="3" 
+             fill="url(#capGradient)" 
+             stroke="#1f2937" 
+             stroke-width="0.5"/>
+    
+    <!-- Cap Top -->
+    <ellipse cx="14" cy="6" rx="4" ry="2" 
+             fill="#4b5563"/>
+    
+    <!-- Bottle Highlight -->
+    <path d="M10 16 L10 38 Q10 39 11 39 L12 39 Q13 39 13 38 L13 16" 
+          fill="rgba(255,255,255,0.3)" 
+          stroke="none"/>
+    
+    <!-- Label on bottle -->
+    <rect x="9" y="22" width="10" height="12" 
+          fill="rgba(255,255,255,0.9)" 
+          stroke="#059669" 
+          stroke-width="0.3" 
+          rx="1"/>
+    
+    <!-- Small logo on label -->
+    <circle cx="14" cy="28" r="2" fill="#059669" opacity="0.7"/>
+    <text x="14" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="white">N</text>
+  </g>
+  
+  <!-- Brand Text -->
+  <text x="45" y="28" fill="url(#textGradient)" 
+        font-family="Arial, sans-serif" 
+        font-weight="bold" 
+        font-size="20" 
+        letter-spacing="1px">NOURISHY</text>
+  
+  <!-- Tagline -->
+  <text x="45" y="42" fill="#6b7280" 
+        font-family="Arial, sans-serif" 
+        font-size="10" 
+        font-style="italic">Premium Hair Care</text>
+  
+  <!-- Decorative Elements -->
+  <circle cx="180" cy="15" r="2" fill="#10b981" opacity="0.6"/>
+  <circle cx="185" cy="20" r="1.5" fill="#059669" opacity="0.4"/>
+  <circle cx="175" cy="25" r="1" fill="#047857" opacity="0.3"/>
+  
+  <!-- Subtle shine effect -->
+  <path d="M45 15 Q60 12 75 15 Q90 18 105 15" 
+        stroke="url(#textGradient)" 
+        stroke-width="0.5" 
+        fill="none" 
+        opacity="0.3"/>
+</svg>

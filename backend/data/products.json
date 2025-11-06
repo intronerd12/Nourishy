@@ -1,0 +1,98 @@
+[
+    {
+        "name": "Nourishy Hydrating Shampoo",
+        "price": 1399,
+        "description": "Our hydrating shampoo gently cleanses while infusing moisture into dry, damaged hair. Formulated with natural oils and botanical extracts to restore shine and softness.",
+        "ratings": 4.8,
+        "images": [{
+            "public_id": "products/nourishy_shampoo",
+            "url": "https://res.cloudinary.com/demo/image/upload/v1612345678/products/nourishy_shampoo.jpg"
+        }],
+        "category": "Shampoo",
+        "seller": "Nourishy",
+        "stock": 50,
+        "numOfReviews": 32,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Repair Conditioner",
+        "price": 1299,
+        "description": "Deep conditioning treatment that repairs damaged hair and split ends. Enriched with keratin and argan oil to strengthen hair from within.",
+        "ratings": 4.7,
+        "images": [{
+            "public_id": "products/nourishy_conditioner",
+            "url": "https://res.cloudinary.com/demo/image/upload/v1612345679/products/nourishy_conditioner.jpg"
+        }],
+        "category": "Conditioner",
+        "seller": "Nourishy",
+        "stock": 45,
+        "numOfReviews": 28,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Argan Hair Oil",
+        "price": 1099,
+        "description": "Luxurious hair oil that tames frizz and adds brilliant shine. Made with 100% pure argan oil to nourish and protect hair from heat damage.",
+        "ratings": 4.9,
+        "images": [{
+            "public_id": "products/nourishy_oil",
+            "url": "https://res.cloudinary.com/demo/image/upload/v1612345680/products/nourishy_oil.jpg"
+        }],
+        "category": "Hair Oil",
+        "seller": "Nourishy",
+        "stock": 60,
+        "numOfReviews": 42,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Intensive Hair Mask",
+        "price": 1699,
+        "description": "Weekly treatment mask that deeply conditions and restores severely damaged hair. Contains shea butter and coconut oil for maximum hydration.",
+        "ratings": 4.6,
+        "images": [{
+            "public_id": "products/nourishy_mask",
+            "url": "https://res.cloudinary.com/demo/image/upload/v1612345681/products/nourishy_mask.jpg"
+        }],
+        "category": "Hair Mask",
+        "seller": "Nourishy",
+        "stock": 35,
+        "numOfReviews": 24,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Smoothing Serum",
+        "price": 1049,
+        "description": "Lightweight serum that eliminates frizz and adds silky smoothness. Perfect for all hair types, especially curly and wavy hair.",
+        "ratings": 4.5,
+        "images": [{
+            "public_id": "products/nourishy_serum",
+            "url": "https://res.cloudinary.com/demo/image/upload/v1612345682/products/nourishy_serum.jpg"
+        }],
+        "category": "Hair Serum",
+        "seller": "Nourishy",
+        "stock": 55,
+        "numOfReviews": 36,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Volume Spray",
+        "price": 949,
+        "description": "Volumizing spray that adds body and lift to fine, limp hair. Creates fullness without stickiness or residue.",
+        "ratings": 4.3,
+        "images": [{
+            "public_id": "products/nourishy_spray",
+            "url": "https://res.cloudinary.com/demo/image/upload/v1612345683/products/nourishy_spray.jpg"
+        }],
+        "category": "Hair Spray",
+        "seller": "Nourishy",
+        "stock": 40,
+        "numOfReviews": 22,
+        "reviews": [],
+        "featured": true
+    }
+]
