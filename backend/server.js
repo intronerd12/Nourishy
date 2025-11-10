@@ -1,7 +1,11 @@
+const dotenv = require('dotenv');
+
+// Load env before importing app/routes so credentialed services initialize correctly
+dotenv.config({ path: './config/.env' });
+
 const app = require('./app');
 const connectDatabase = require('./config/database');
 const { verifyServices } = require('./utils/serviceVerification');
-const dotenv = require('dotenv');
 
 // Handle uncaught exceptions
 process.on('uncaughtException', err => {
@@ -10,8 +14,7 @@ process.on('uncaughtException', err => {
     process.exit(1);
 });
 
-// Config
-dotenv.config({path: './config/.env'});
+// Env already loaded above
 
 // Connecting to database
 connectDatabase();

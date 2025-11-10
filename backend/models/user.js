@@ -16,11 +16,21 @@ const userSchema = new mongoose.Schema({
         unique: true,
         validate: [validator.isEmail, 'Please enter valid email address']
     },
+    // Password is optional when using Firebase auth
     password: {
         type: String,
-        required: [true, 'Please enter your password'],
         minlength: [6, 'Your password must be longer than 6 characters'],
-        select: false
+        select: false,
+        required: function () {
+            // Require password only if not linked to Firebase
+            return !this.firebaseUid;
+        }
+    },
+    // Link to Firebase Authentication UID
+    firebaseUid: {
+        type: String,
+        index: true,
+        sparse: true
     },
     avatar: {
         public_id: {
@@ -54,10 +64,11 @@ const userSchema = new mongoose.Schema({
     emailVerificationExpire: Date
 })
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        next()
+    if (!this.isModified('password') || !this.password) {
+        return next();
     }
     this.password = await bcrypt.hash(this.password, 10)
+    next();
 });
 
 userSchema.methods.getJwtToken = function () {

@@ -1,6 +1,23 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { auth, firebaseEnvReady } from '../utils/firebase';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+
+// Map Firebase auth errors to friendlier, actionable messages
+const friendlyAuthError = (error) => {
+    const code = error?.code || '';
+    const map = {
+        'auth/configuration-not-found': 'Enable Email/Password in Firebase Console → Authentication → Sign-in method.',
+        'auth/operation-not-allowed': 'Email/Password sign-in is disabled. Enable it in Firebase Console.',
+        'auth/user-not-found': 'No account found for this email. Please register first.',
+        'auth/wrong-password': 'Incorrect password. Please try again.',
+        'auth/invalid-credential': 'Invalid email or password. Please check and try again.',
+        'auth/network-request-failed': 'Network error. Check your connection and retry.',
+        'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.'
+    };
+    return map[code] || (error?.message || 'Authentication failed');
+};
 
 const AuthContext = createContext();
 
@@ -67,33 +84,48 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.baseURL = import.meta.env.VITE_API || 'http://localhost:4000/api/v1';
     axios.defaults.withCredentials = true;
 
-    // Load user on app start
+    // Observe Firebase auth state and sync with backend user
     useEffect(() => {
-        loadUser();
+        if (!firebaseEnvReady || !auth) {
+            // If Firebase isn't configured, keep existing behavior but unauthenticated
+            dispatch({ type: 'LOAD_USER_FAIL', payload: 'Firebase not configured' });
+            return;
+        }
+
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            try {
+                if (firebaseUser) {
+                    dispatch({ type: 'LOAD_USER_REQUEST' });
+                    const idToken = await firebaseUser.getIdToken();
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+                    const { data } = await axios.get('/me');
+                    dispatch({ type: 'LOAD_USER_SUCCESS', payload: data.user });
+                } else {
+                    delete axios.defaults.headers.common['Authorization'];
+                    dispatch({ type: 'LOGOUT_SUCCESS' });
+                }
+            } catch (error) {
+                const message = error.response?.data?.message || 'Failed to load user';
+                dispatch({ type: 'LOAD_USER_FAIL', payload: message });
+            }
+        });
+
+        return () => unsubscribe();
     }, []);
 
     // Load user
     const loadUser = async () => {
         try {
             dispatch({ type: 'LOAD_USER_REQUEST' });
-            
-            const token = localStorage.getItem('token');
-            if (token) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            if (!firebaseEnvReady || !auth?.currentUser) {
+                throw new Error('Not authenticated');
             }
-
+            const idToken = await auth.currentUser.getIdToken();
+            axios.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
             const { data } = await axios.get('/me');
-            
-            dispatch({
-                type: 'LOAD_USER_SUCCESS',
-                payload: data.user
-            });
+            dispatch({ type: 'LOAD_USER_SUCCESS', payload: data.user });
         } catch (error) {
-            dispatch({
-                type: 'LOAD_USER_FAIL',
-                payload: error.response?.data?.message || 'Failed to load user'
-            });
-            localStorage.removeItem('token');
+            dispatch({ type: 'LOAD_USER_FAIL', payload: error.response?.data?.message || error.message || 'Failed to load user' });
             delete axios.defaults.headers.common['Authorization'];
         }
     };
@@ -102,32 +134,23 @@ export const AuthProvider = ({ children }) => {
     const register = async (userData) => {
         try {
             dispatch({ type: 'REGISTER_REQUEST' });
+            if (!firebaseEnvReady || !auth) throw new Error('Firebase not configured');
 
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
+            const cred = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+            if (userData.name) {
+                try { await updateProfile(cred.user, { displayName: userData.name }); } catch {}
+            }
 
-            const { data } = await axios.post('/register', userData, config);
+            const idToken = await cred.user.getIdToken();
+            axios.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+            const { data } = await axios.get('/me');
 
-            // Store token in localStorage
-            localStorage.setItem('token', data.token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-
-            dispatch({
-                type: 'REGISTER_SUCCESS',
-                payload: data.user
-            });
-
+            dispatch({ type: 'REGISTER_SUCCESS', payload: data.user });
             toast.success('Registration successful!');
             return { success: true };
         } catch (error) {
-            const message = error.response?.data?.message || 'Registration failed';
-            dispatch({
-                type: 'REGISTER_FAIL',
-                payload: message
-            });
+            const message = error.response?.data?.message || friendlyAuthError(error);
+            dispatch({ type: 'REGISTER_FAIL', payload: message });
             toast.error(message);
             return { success: false, message };
         }
@@ -137,32 +160,19 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             dispatch({ type: 'LOGIN_REQUEST' });
+            if (!firebaseEnvReady || !auth) throw new Error('Firebase not configured');
 
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            const idToken = await cred.user.getIdToken();
+            axios.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+            const { data } = await axios.get('/me');
 
-            const { data } = await axios.post('/login', { email, password }, config);
-
-            // Store token in localStorage
-            localStorage.setItem('token', data.token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-
-            dispatch({
-                type: 'LOGIN_SUCCESS',
-                payload: data.user
-            });
-
+            dispatch({ type: 'LOGIN_SUCCESS', payload: data.user });
             toast.success('Login successful!');
             return { success: true, user: data.user };
         } catch (error) {
-            const message = error.response?.data?.message || 'Login failed';
-            dispatch({
-                type: 'LOGIN_FAIL',
-                payload: message
-            });
+            const message = error.response?.data?.message || friendlyAuthError(error);
+            dispatch({ type: 'LOGIN_FAIL', payload: message });
             toast.error(message);
             return { success: false, message };
         }
@@ -171,17 +181,14 @@ export const AuthProvider = ({ children }) => {
     // Logout user
     const logout = async () => {
         try {
-            await axios.post('/logout');
-            
-            localStorage.removeItem('token');
+            if (firebaseEnvReady && auth) {
+                await signOut(auth);
+            }
             delete axios.defaults.headers.common['Authorization'];
-            
             dispatch({ type: 'LOGOUT_SUCCESS' });
             toast.success('Logged out successfully!');
         } catch (error) {
             console.error('Logout error:', error);
-            // Even if logout fails on server, clear local data
-            localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
             dispatch({ type: 'LOGOUT_SUCCESS' });
         }

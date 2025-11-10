@@ -53,18 +53,20 @@ const Header = ({cartItems}) => {
                                         <Link className="nav-link" to="/shop">Shop</Link>
                                     </li>
 
-                                    <li className="nav-item">
-                                        <Link className="nav-link" to="/orders">Orders</Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link className="nav-link" to="/create">Create</Link>
-                                    </li>
-                                    <li className="nav-item">
-                                        <Link className="nav-link" to="/admin/dashboard">
-                                            <i className="fas fa-chart-bar me-1"></i>
-                                            Dashboard
-                                        </Link>
-                                    </li>
+                                    {/* Orders moved to user dropdown; removed from top nav */}
+                                    {user?.role === 'admin' && (
+                                        <>
+                                            <li className="nav-item">
+                                                <Link className="nav-link" to="/create">Create</Link>
+                                            </li>
+                                            <li className="nav-item">
+                                                <Link className="nav-link" to="/admin/dashboard">
+                                                    <i className="fas fa-chart-bar me-1"></i>
+                                                    Dashboard
+                                                </Link>
+                                            </li>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </ul>
@@ -80,6 +82,7 @@ const Header = ({cartItems}) => {
                                             {user?.role === 'admin' && (
                                                 <li><Link className="dropdown-item" to="/admin/dashboard">Admin Dashboard</Link></li>
                                             )}
+                                            <li><Link className="dropdown-item" to="/orders">Orders</Link></li>
                                             <li><Link className="dropdown-item" to="/me">Profile</Link></li>
                                             <li><hr className="dropdown-divider" /></li>
                                             <li>

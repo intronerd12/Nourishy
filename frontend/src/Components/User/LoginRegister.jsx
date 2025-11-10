@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import Loader from '../Layout/Loader'
 import MetaData from '../Layout/MetaData'
 import { useAuth } from '../../contexts/AuthContext'
+import * as Yup from 'yup'
 
 const LoginRegister = () => {
     const { login, register, loading, isAuthenticated, user } = useAuth()
@@ -14,11 +15,24 @@ const LoginRegister = () => {
         email: '',
         password: ''
     })
+    const [loginErrors, setLoginErrors] = useState({})
 
     const [registerData, setRegisterData] = useState({
         name: '',
         email: '',
         password: ''
+    })
+    const [registerErrors, setRegisterErrors] = useState({})
+
+    const loginSchema = Yup.object().shape({
+        email: Yup.string().trim().email('Enter a valid email').required('Email is required'),
+        password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
+    })
+
+    const registerSchema = Yup.object().shape({
+        name: Yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
+        email: Yup.string().trim().email('Enter a valid email').required('Email is required'),
+        password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
     })
 
     const [activeTab, setActiveTab] = useState('login')
@@ -49,6 +63,20 @@ const LoginRegister = () => {
 
     const handleLoginSubmit = async (e) => {
         e.preventDefault()
+        try {
+            setLoginErrors({})
+            await loginSchema.validate(loginData, { abortEarly: false })
+        } catch (error) {
+            if (error?.name === 'ValidationError') {
+                const fieldErrors = {}
+                error.inner.forEach(err => {
+                    if (err.path && !fieldErrors[err.path]) fieldErrors[err.path] = err.message
+                })
+                setLoginErrors(fieldErrors)
+                toast.error('Please fix the validation errors')
+                return
+            }
+        }
         const result = await login(loginData.email, loginData.password)
         if (result.success) {
             // Navigation is handled in useEffect above
@@ -57,6 +85,20 @@ const LoginRegister = () => {
 
     const handleRegisterSubmit = async (e) => {
         e.preventDefault()
+        try {
+            setRegisterErrors({})
+            await registerSchema.validate(registerData, { abortEarly: false })
+        } catch (error) {
+            if (error?.name === 'ValidationError') {
+                const fieldErrors = {}
+                error.inner.forEach(err => {
+                    if (err.path && !fieldErrors[err.path]) fieldErrors[err.path] = err.message
+                })
+                setRegisterErrors(fieldErrors)
+                toast.error('Please fix the validation errors')
+                return
+            }
+        }
         
         const userData = {
             name: registerData.name,
@@ -201,6 +243,7 @@ const LoginRegister = () => {
                                                     onFocus={(e) => e.target.style.borderColor = 'var(--emerald-500)'}
                                                     onBlur={(e) => e.target.style.borderColor = 'var(--emerald-200)'}
                                                 />
+                                                {loginErrors.email && <small className="text-danger">{loginErrors.email}</small>}
                                             </div>
 
                                             <div className="mb-4">
@@ -225,6 +268,7 @@ const LoginRegister = () => {
                                                     onFocus={(e) => e.target.style.borderColor = 'var(--emerald-500)'}
                                                     onBlur={(e) => e.target.style.borderColor = 'var(--emerald-200)'}
                                                 />
+                                                {loginErrors.password && <small className="text-danger">{loginErrors.password}</small>}
                                             </div>
 
                                             <div className="d-flex justify-content-end align-items-center mb-4">
@@ -313,6 +357,7 @@ const LoginRegister = () => {
                                                     onFocus={(e) => e.target.style.borderColor = 'var(--emerald-500)'}
                                                     onBlur={(e) => e.target.style.borderColor = 'var(--emerald-200)'}
                                                 />
+                                                {registerErrors.name && <small className="text-danger">{registerErrors.name}</small>}
                                             </div>
 
                                             <div className="mb-4">
@@ -337,6 +382,7 @@ const LoginRegister = () => {
                                                     onFocus={(e) => e.target.style.borderColor = 'var(--emerald-500)'}
                                                     onBlur={(e) => e.target.style.borderColor = 'var(--emerald-200)'}
                                                 />
+                                                {registerErrors.email && <small className="text-danger">{registerErrors.email}</small>}
                                             </div>
 
                                             <div className="mb-4">
@@ -364,6 +410,7 @@ const LoginRegister = () => {
                                                 <small className="text-muted">
                                                     Password should be at least 6 characters long
                                                 </small>
+                                                {registerErrors.password && <small className="text-danger d-block">{registerErrors.password}</small>}
                                             </div>
 
                                             <button

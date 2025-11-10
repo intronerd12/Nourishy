@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Button, Form, Badge, Alert, Modal } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import MetaData from '../Components/Layout/MetaData'
 import Loader from '../Components/Layout/Loader'
 import { toast } from 'react-toastify'
 import '../styles/Order.css'
+import { useAuth } from '../contexts/AuthContext'
 
 const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingInfo }) => {
     const [products, setProducts] = useState([])
@@ -14,6 +15,8 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
     const [currentStep, setCurrentStep] = useState(1)
     const [orderSummary, setOrderSummary] = useState({})
     const [showConfirmation, setShowConfirmation] = useState(false)
+    const navigate = useNavigate()
+    const { user, isAuthenticated } = useAuth()
     
     // Form states
     const [customerInfo, setCustomerInfo] = useState({
@@ -70,6 +73,17 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
     useEffect(() => {
         fetchProducts()
     }, [])
+
+    // Prefill authenticated user's name and email, keep email read-only
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            setCustomerInfo(prev => ({
+                ...prev,
+                name: user.name || prev.name,
+                email: user.email || prev.email
+            }))
+        }
+    }, [isAuthenticated, user])
 
     // Get product image with fallback
     const getProductImage = (product) => {
@@ -143,9 +157,9 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
         const subtotal = cartItems.reduce((sum, item) => 
             sum + (item.price * item.quantity), 0
         )
-        const shipping = subtotal > 2500 ? 0 : 150
-        const tax = Math.round(subtotal * 0.12)
-        const total = subtotal + shipping + tax
+        const shipping = 0
+        const tax = 0
+        const total = subtotal
 
         return { subtotal, shipping, tax, total }
     }
@@ -202,13 +216,50 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
         setShowConfirmation(true)
     }
 
-    const confirmOrder = () => {
-        // Here you would typically send the order to your backend
-        toast.success('Order placed successfully!', {
-            position: 'top-center'
-        })
-        setShowConfirmation(false)
-        // Reset form or redirect to success page
+    const confirmOrder = async () => {
+        try {
+            if (!isAuthenticated) {
+                toast.error('Please login to place an order')
+                return
+            }
+
+            if (!cartItems || cartItems.length === 0) {
+                toast.error('Your cart is empty')
+                return
+            }
+
+            const totals = calculateTotals()
+            const payload = {
+                orderItems: cartItems.map(i => ({ product: i.product, quantity: i.quantity })),
+                shippingInfo: {
+                    address: deliveryInfo.address,
+                    city: deliveryInfo.city,
+                    postalCode: deliveryInfo.postalCode,
+                    country: 'Philippines',
+                    phoneNo: customerInfo.phone
+                },
+                taxPrice: totals.tax,
+                shippingPrice: totals.shipping,
+                paymentInfo: { id: paymentMethod, status: paymentMethod }
+            }
+
+            const { data } = await axios.post('/order/new', payload)
+            if (data?.success) {
+                // Clear cart items one by one so App state persists and localStorage syncs
+                for (const item of cartItems) {
+                    removeItemFromCart(item.product)
+                }
+
+                toast.success('Order placed successfully!', { position: 'top-center' })
+                setShowConfirmation(false)
+                navigate('/orders')
+            } else {
+                toast.error('Failed to place order')
+            }
+        } catch (error) {
+            const message = error.response?.data?.message || error.message || 'Failed to place order'
+            toast.error(message)
+        }
     }
 
     if (loading) {
@@ -395,16 +446,17 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
                                                     </Form.Group>
                                                 </Col>
                                                 <Col md={6}>
-                                                    <Form.Group className="mb-3">
-                                                        <Form.Label>Email Address *</Form.Label>
-                                                        <Form.Control
-                                                            type="email"
-                                                            value={customerInfo.email}
-                                                            onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                                                            required
-                                                            className="form-control-lg"
-                                                        />
-                                                    </Form.Group>
+                                                        <Form.Group className="mb-3">
+                                                            <Form.Label>Email Address *</Form.Label>
+                                                            <Form.Control
+                                                                type="email"
+                                                                value={customerInfo.email}
+                                                                readOnly
+                                                                required
+                                                                className="form-control-lg"
+                                                                title="Your email is set from your account and cannot be edited here"
+                                                            />
+                                                        </Form.Group>
                                                 </Col>
                                             </Row>
                                             <Form.Group className="mb-4">
@@ -843,23 +895,12 @@ const OrderTotals = ({ totals }) => {
             </div>
             <div className="total-line">
                 <span>Shipping:</span>
-                <span>{totals.shipping === 0 ? 'FREE' : `₱${totals.shipping}`}</span>
-            </div>
-            <div className="total-line">
-                <span>Tax (12%):</span>
-                <span>₱{totals.tax.toLocaleString()}</span>
+                <span>FREE</span>
             </div>
             <div className="total-line total-final">
                 <span>Total:</span>
                 <span>₱{totals.total.toLocaleString()}</span>
             </div>
-            {totals.subtotal < 2500 && (
-                <div className="shipping-notice">
-                    <small className="text-muted">
-                        Add ₱{(2500 - totals.subtotal).toLocaleString()} more for free shipping!
-                    </small>
-                </div>
-            )}
         </div>
     )
 }
@@ -883,7 +924,7 @@ const OrderConfirmationModal = ({ show, onHide, orderSummary, confirmOrder }) =>
                                 <div key={index} className="confirmation-item">
                                     <span>{item.name} ({item.size})</span>
                                     <span>Qty: {item.quantity}</span>
-                                    <span>₱{(item.customPrice * item.quantity).toLocaleString()}</span>
+                                    <span>₱{(Number((item.customPrice ?? item.price)) * Number(item.quantity)).toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>
@@ -914,11 +955,7 @@ const OrderConfirmationModal = ({ show, onHide, orderSummary, confirmOrder }) =>
                                 </div>
                                 <div className="d-flex justify-content-between">
                                     <span>Shipping:</span>
-                                    <span>{orderSummary.totals?.shipping === 0 ? 'FREE' : `₱${orderSummary.totals?.shipping}`}</span>
-                                </div>
-                                <div className="d-flex justify-content-between">
-                                    <span>Tax:</span>
-                                    <span>₱{orderSummary.totals?.tax.toLocaleString()}</span>
+                                    <span>FREE</span>
                                 </div>
                                 <hr />
                                 <div className="d-flex justify-content-between h5">

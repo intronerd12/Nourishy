@@ -256,13 +256,10 @@ exports.myOrders = async (req, res, next) => {
 // Get all orders - Admin => /api/v1/admin/orders/
 exports.allOrders = async (req, res, next) => {
     try {
-        const orders = await Order.find();
+        // Populate user name and email so admins can identify who placed each order
+        const orders = await Order.find().populate('user', 'name email');
 
-        let totalAmount = 0;
-
-        orders.forEach(order => {
-            totalAmount += order.totalPrice;
-        });
+        const totalAmount = orders.reduce((sum, o) => sum + (Number(o.totalPrice) || 0), 0);
 
         res.status(200).json({
             success: true,
@@ -387,11 +384,37 @@ exports.updateOrder = async (req, res, next) => {
                 </div>
             `;
 
+            // Generate and attach updated PDF receipt
+            let attachments = [];
+            let pdfPathToCleanup = null;
+            try {
+                const pdfPath = await generateReceiptPdf(order, order.user);
+                pdfPathToCleanup = pdfPath;
+                attachments.push({
+                    filename: `Nourishy-Receipt-${order._id}.pdf`,
+                    path: pdfPath,
+                    contentType: 'application/pdf'
+                });
+            } catch (pdfErr) {
+                console.error('Failed to generate PDF receipt for status update:', pdfErr);
+            }
+
             await sendEmail({
                 email: order.user?.email,
                 subject: `Nourishy - Order ${order.orderStatus}`,
-                html
+                html,
+                attachments
             });
+
+            // Attempt to remove temp PDF after sending
+            if (pdfPathToCleanup) {
+                try {
+                    const fs = require('fs');
+                    fs.unlink(pdfPathToCleanup, () => {});
+                } catch (cleanupErr) {
+                    console.warn('Could not delete temp receipt PDF:', cleanupErr);
+                }
+            }
         } catch (emailErr) {
             console.error('Failed to send order status email:', emailErr);
         }

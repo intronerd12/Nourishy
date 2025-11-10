@@ -15,7 +15,8 @@ module.exports = function generateReceiptPdf(order, user) {
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
-      const peso = (n) => `₱${Number(n || 0).toFixed(2)}`;
+      // Use 'Php' text instead of the peso symbol to ensure printers render correctly
+      const peso = (n) => `Php ${Number(n || 0).toFixed(2)}`;
       const orderDate = new Date(order.paidAt || Date.now()).toLocaleString();
 
       // Brand header
@@ -91,23 +92,39 @@ module.exports = function generateReceiptPdf(order, user) {
 
       doc.moveDown();
 
-      // Summary box
+      // Summary box (responsive width/height to fit all lines)
       const summaryTop = y + 10;
-      doc.rect(350, summaryTop, 195, 80).strokeColor('#e0e0e0').stroke();
-      doc.fontSize(11).fillColor('#333');
-      doc.text('Summary', 360, summaryTop + 8);
-      doc.fontSize(10).fillColor('#555');
-      doc.text(`Items Total:`, 360, summaryTop + 28, { width: 100 });
-      doc.text(peso(order.itemsPrice), 445, summaryTop + 28, { width: 100, align: 'right' });
-      doc.text(`Tax:`, 360, summaryTop + 44, { width: 100 });
-      doc.text(peso(order.taxPrice), 445, summaryTop + 44, { width: 100, align: 'right' });
-      doc.text(`Shipping:`, 360, summaryTop + 60, { width: 100 });
-      doc.text(peso(order.shippingPrice), 445, summaryTop + 60, { width: 100, align: 'right' });
+      const boxLeft = 350;
+      const boxWidth = 220; // widened to prevent clipping
+      const labelX = boxLeft + 10;
+      const amountBlockWidth = 110;
+      const amountX = boxLeft + boxWidth - 10 - amountBlockWidth;
+      const headerHeight = 24;
+      const lineHeight = 18;
 
-      doc.fontSize(11).fillColor('#333');
-      doc.text(`Total:`, 360, summaryTop + 80, { width: 100 });
-      doc.fontSize(12).fillColor('#000');
-      doc.text(peso(order.totalPrice), 445, summaryTop + 80, { width: 100, align: 'right' });
+      const rows = [
+        { label: 'Items Total:', value: peso(order.itemsPrice) },
+        { label: 'Tax:', value: peso(order.taxPrice) },
+        { label: 'Shipping:', value: peso(order.shippingPrice) },
+        { label: 'Total:', value: peso(order.totalPrice), isTotal: true },
+      ];
+
+      const boxHeight = headerHeight + rows.length * lineHeight + 18; // padding bottom
+      doc.rect(boxLeft, summaryTop, boxWidth, boxHeight).strokeColor('#e0e0e0').stroke();
+
+      doc.fontSize(11).fillColor('#333').text('Summary', labelX, summaryTop + 8);
+
+      let rowY = summaryTop + headerHeight;
+      rows.forEach((row) => {
+        if (row.isTotal) {
+          doc.fontSize(11).fillColor('#333').text(row.label, labelX, rowY);
+          doc.fontSize(12).fillColor('#000').text(row.value, amountX, rowY, { width: amountBlockWidth, align: 'right' });
+        } else {
+          doc.fontSize(10).fillColor('#555').text(row.label, labelX, rowY);
+          doc.fontSize(10).fillColor('#555').text(row.value, amountX, rowY, { width: amountBlockWidth, align: 'right' });
+        }
+        rowY += lineHeight;
+      });
 
       // Footer
       doc.moveDown(2);

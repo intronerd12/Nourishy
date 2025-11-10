@@ -15,9 +15,10 @@ import {
     Cell
 } from 'recharts';
 import axios from 'axios';
-import { getToken } from '../../utils/helpers';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Analytics = () => {
+    const { isAuthenticated, loading: authLoading } = useAuth();
     const [salesData, setSalesData] = useState([]);
     const [productStats, setProductStats] = useState([]);
     const [userStats, setUserStats] = useState([]);
@@ -35,12 +36,8 @@ const Analytics = () => {
         const fetchAnalytics = async () => {
             try {
                 setLoading(true);
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${getToken()}`
-                    }
-                };
-                const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/analytics?granularity=${granularity}`, config);
+                // Rely on axios defaults set by AuthContext (Authorization: Bearer <idToken>)
+                const { data } = await axios.get(`/admin/analytics?granularity=${granularity}`);
                 if (data?.success) {
                     setSalesData(Array.isArray(data.salesData) ? data.salesData : []);
                     setProductStats(Array.isArray(data.productStats) ? data.productStats : []);
@@ -62,8 +59,12 @@ const Analytics = () => {
                 setLoading(false);
             }
         };
-        fetchAnalytics();
-    }, [granularity]);
+
+        // Only fetch when authenticated and auth context has finished loading
+        if (isAuthenticated && !authLoading) {
+            fetchAnalytics();
+        }
+    }, [granularity, isAuthenticated, authLoading]);
 
     const formatCurrency = (value) => `₱${value.toLocaleString()}`;
 

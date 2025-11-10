@@ -6,10 +6,10 @@ import { getUser } from '../../utils/helpers'
 const ConfirmOrder = ({cartItems, shippingInfo}) => {
     const [user, setUser] = useState(getUser() ? getUser() : {})
     let navigate = useNavigate();
-    // Calculate Order Prices
+    // Calculate Order Prices (free shipping, no tax)
     const itemsPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
-    const shippingPrice = itemsPrice > 200 ? 0 : 25
-    const taxPrice = Number((0.05 * itemsPrice).toFixed(2))
+    const shippingPrice = 0
+    const taxPrice = 0
     const totalPrice = (itemsPrice + shippingPrice + taxPrice).toFixed(2)
 
     const processToPayment = () => {
@@ -69,8 +69,7 @@ const ConfirmOrder = ({cartItems, shippingInfo}) => {
                         <h4>Order Summary</h4>
                         <hr />
                         <p>Subtotal:  <span className="order-summary-values">₱{itemsPrice}</span></p>
-                        <p>Shipping: <span className="order-summary-values">₱{shippingPrice}</span></p>
-                        <p>Tax:  <span className="order-summary-values">₱{taxPrice}</span></p>
+                        <p>Shipping: <span className="order-summary-values">{shippingPrice === 0 ? 'FREE' : `₱${shippingPrice}`}</span></p>
 
                         <hr />
 

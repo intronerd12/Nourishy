@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { getToken } from '../../utils/helpers';
+import * as Yup from 'yup'
 
 const ProductsManagement = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [images, setImages] = useState([]);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         price: '',
@@ -16,6 +19,16 @@ const ProductsManagement = () => {
         stock: '',
         brand: ''
     });
+    const [formErrors, setFormErrors] = useState({})
+
+    const productSchema = Yup.object().shape({
+        name: Yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
+        price: Yup.number().typeError('Price must be a number').positive('Price must be greater than 0').required('Price is required'),
+        description: Yup.string().trim().min(10, 'Description must be at least 10 characters').required('Description is required'),
+        category: Yup.string().trim().required('Category is required'),
+        stock: Yup.number().typeError('Stock must be a number').integer('Stock must be an integer').min(0, 'Stock cannot be negative').required('Stock is required'),
+        brand: Yup.string().trim().min(2, 'Brand must be at least 2 characters').required('Brand is required')
+    })
 
     useEffect(() => {
         fetchProducts();
@@ -42,18 +55,25 @@ const ProductsManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Validate form data with Yup
+            setFormErrors({})
+            await productSchema.validate(formData, { abortEarly: false })
+
+            const form = new FormData();
+            Object.entries(formData).forEach(([key, value]) => form.append(key, value));
+            images.forEach((file) => form.append('images', file));
+
             const config = {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
+                    'Content-Type': 'multipart/form-data'
                 }
             };
 
             if (editingProduct) {
-                await axios.put(`${import.meta.env.VITE_API}/admin/product/${editingProduct._id}`, formData, config);
+                await axios.put(`/admin/product/${editingProduct._id}`, form, config);
                 toast.success('Product updated successfully');
             } else {
-                await axios.post(`${import.meta.env.VITE_API}/admin/product/new`, formData, config);
+                await axios.post(`/admin/product/new`, form, config);
                 toast.success('Product created successfully');
             }
 
@@ -65,11 +85,23 @@ const ProductsManagement = () => {
                 stock: '',
                 brand: ''
             });
+            setImages([]);
             setShowAddForm(false);
             setEditingProduct(null);
             fetchProducts();
         } catch (error) {
-            toast.error('Failed to save product');
+            if (error?.name === 'ValidationError') {
+                const fieldErrors = {}
+                error.inner.forEach(err => {
+                    if (err.path && !fieldErrors[err.path]) {
+                        fieldErrors[err.path] = err.message
+                    }
+                })
+                setFormErrors(fieldErrors)
+                toast.error('Please fix the validation errors')
+            } else {
+                toast.error('Failed to save product')
+            }
         }
     };
 
@@ -83,18 +115,14 @@ const ProductsManagement = () => {
             stock: product.stock,
             brand: product.brand
         });
+        setImages([]);
         setShowAddForm(true);
     };
 
     const handleDelete = async (productId) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
-                const config = {
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    }
-                };
-                await axios.delete(`${import.meta.env.VITE_API}/admin/product/${productId}`, config);
+                await axios.delete(`/admin/product/${productId}`);
                 toast.success('Product deleted successfully');
                 fetchProducts();
             } catch (error) {
@@ -112,8 +140,37 @@ const ProductsManagement = () => {
             stock: '',
             brand: ''
         });
+        setImages([]);
         setShowAddForm(false);
         setEditingProduct(null);
+    };
+
+    const toggleSelectAll = (e) => {
+        const checked = e.target.checked;
+        setSelectAll(checked);
+        setSelectedIds(checked ? products.map(p => p._id) : []);
+    };
+
+    const toggleSelect = (productId) => {
+        setSelectedIds(prev => {
+            if (prev.includes(productId)) return prev.filter(id => id !== productId);
+            return [...prev, productId];
+        });
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return toast.info('No products selected');
+        if (!window.confirm(`Delete ${selectedIds.length} selected product(s)?`)) return;
+        try {
+            const config = { headers: { 'Content-Type': 'application/json' } };
+            await axios.post(`/admin/products/bulk-delete`, { ids: selectedIds }, config);
+            toast.success('Selected products deleted');
+            setSelectedIds([]);
+            setSelectAll(false);
+            fetchProducts();
+        } catch (error) {
+            toast.error('Bulk delete failed');
+        }
     };
 
     if (loading) {
@@ -130,6 +187,13 @@ const ProductsManagement = () => {
                         onClick={() => setShowAddForm(true)}
                     >
                         Add New Product
+                    </button>
+                    <button
+                        className="btn btn-danger"
+                        style={{ marginLeft: '12px' }}
+                        onClick={handleBulkDelete}
+                    >
+                        Delete Selected
                     </button>
                 </div>
 
@@ -151,6 +215,7 @@ const ProductsManagement = () => {
                                             onChange={handleInputChange}
                                             required
                                         />
+                                        {formErrors.name && <small className="text-danger">{formErrors.name}</small>}
                                     </div>
                             
                             <div className="form-group">
@@ -162,6 +227,7 @@ const ProductsManagement = () => {
                                     onChange={handleInputChange}
                                     required
                                 />
+                                {formErrors.price && <small className="text-danger">{formErrors.price}</small>}
                             </div>
                             
                             <div className="form-group">
@@ -173,6 +239,7 @@ const ProductsManagement = () => {
                                     rows="4"
                                     required
                                 />
+                                {formErrors.description && <small className="text-danger">{formErrors.description}</small>}
                             </div>
                             
                             <div className="form-group">
@@ -191,6 +258,7 @@ const ProductsManagement = () => {
                                     <option value="Hair Serum">Hair Serum</option>
                                     <option value="Hair Spray">Hair Spray</option>
                                 </select>
+                                {formErrors.category && <small className="text-danger">{formErrors.category}</small>}
                             </div>
                             
                             <div className="form-group">
@@ -202,6 +270,7 @@ const ProductsManagement = () => {
                                     onChange={handleInputChange}
                                     required
                                 />
+                                {formErrors.brand && <small className="text-danger">{formErrors.brand}</small>}
                             </div>
                             
                             <div className="form-group">
@@ -212,6 +281,18 @@ const ProductsManagement = () => {
                                     value={formData.stock}
                                     onChange={handleInputChange}
                                     required
+                                />
+                                {formErrors.stock && <small className="text-danger">{formErrors.stock}</small>}
+                            </div>
+
+                            <div className="form-group">
+                                <label>Images</label>
+                                <input
+                                    type="file"
+                                    name="images"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={(e) => setImages(Array.from(e.target.files))}
                                 />
                             </div>
                             
@@ -233,6 +314,9 @@ const ProductsManagement = () => {
                     <table>
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" checked={selectAll} onChange={toggleSelectAll} />
+                                </th>
                                 <th>Image</th>
                                 <th>Name</th>
                                 <th>Price</th>
@@ -245,6 +329,13 @@ const ProductsManagement = () => {
                         <tbody>
                             {products.map(product => (
                                 <tr key={product._id}>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.includes(product._id)}
+                                            onChange={() => toggleSelect(product._id)}
+                                        />
+                                    </td>
                                     <td>
                                         <img 
                                             src={product.images?.[0]?.url || '/images/default-product.png'} 

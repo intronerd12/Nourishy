@@ -5,6 +5,7 @@ import Analytics from './Analytics';
 import ProductsManagement from './ProductsManagement';
 import UsersManagement from './UsersManagement';
 import OrdersManagement from './OrdersManagement';
+import ReviewsManagement from './ReviewsManagement';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/logo.svg';
 import './Dashboard.css';
@@ -30,6 +31,8 @@ const Dashboard = () => {
                 return <UsersManagement />;
             case 'orders':
                 return <OrdersManagement />;
+            case 'reviews':
+                return <ReviewsManagement />;
             default:
                 return <Analytics />;
         }
@@ -43,6 +46,7 @@ const Dashboard = () => {
         { id: 'analytics', label: 'Analytics', icon: '📊' },
         { id: 'products', label: 'Products', icon: '📦' },
         { id: 'orders', label: 'Orders', icon: '🧾' },
+        { id: 'reviews', label: 'Reviews', icon: '⭐' },
         { id: 'users', label: 'Users', icon: '👥' }
     ];
 

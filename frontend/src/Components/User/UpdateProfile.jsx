@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../contexts/AuthContext';
 import Loader from '../Layout/Loader';
+import * as Yup from 'yup'
 
 
 const UpdateProfile = () => {
@@ -18,6 +19,12 @@ const UpdateProfile = () => {
     const [loading, setLoading] = useState(false)
     const [isUpdated, setIsUpdated] = useState(false)
     let navigate = useNavigate();
+
+    const [errors, setErrors] = useState({})
+    const profileSchema = Yup.object().shape({
+        name: Yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
+        email: Yup.string().trim().email('Enter a valid email').required('Email is required')
+    })
 
     const updateProfile = async (userData) => {
         const token = localStorage.getItem('token');
@@ -66,8 +73,22 @@ const UpdateProfile = () => {
         }
     }, [user, isAuthenticated, authLoading, navigate])
 
-    const submitHandler = (e) => {
+    const submitHandler = async (e) => {
         e.preventDefault();
+        try {
+            setErrors({})
+            await profileSchema.validate({ name, email }, { abortEarly: false })
+        } catch (error) {
+            if (error?.name === 'ValidationError') {
+                const fieldErrors = {}
+                error.inner.forEach(err => {
+                    if (err.path && !fieldErrors[err.path]) fieldErrors[err.path] = err.message
+                })
+                setErrors(fieldErrors)
+                toast.error('Please fix the validation errors')
+                return
+            }
+        }
         const formData = new FormData();
         formData.set('name', name);
         formData.set('email', email);
@@ -118,6 +139,7 @@ const UpdateProfile = () => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                             />
+                            {errors.name && <small className="text-danger">{errors.name}</small>}
                         </div>
 
                         <div className="form-group">
@@ -130,6 +152,7 @@ const UpdateProfile = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
+                            {errors.email && <small className="text-danger">{errors.email}</small>}
                         </div>
 
                         <div className='form-group'>

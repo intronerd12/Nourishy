@@ -23,6 +23,7 @@ import Profile from './Components/User/Profile';
 import UpdatePassword from './Components/User/UpdatePassword';
 import UpdateProfile from './Components/User/UpdateProfile';
 import EmailVerification from './Components/User/EmailVerification';
+import FirebaseAuth from './Components/User/FirebaseAuth';
 import Cart from './Components/Cart/Cart';
 import Shipping from './Components/Cart/Shipping';
 import ConfirmOrder from './Components/Cart/ConfirmOrder';
@@ -68,49 +69,40 @@ function App() {
     }
   }, [isAuthenticated, user]);
 
-  const addItemToCart = async (id, quantity) => {
-    // console.log(id, quantity)
+  const addItemToCart = async (id, quantity = 1) => {
     try {
       const { data } = await axios.get(`${import.meta.env.VITE_API}/product/${id}`)
-      const item = {
-        product: data.product._id,
-        name: data.product.name,
-        price: data.product.price,
-        image: data.product.images[0].url,
-        stock: data.product.stock,
+      const fetched = data.product
+      const newItem = {
+        product: fetched._id,
+        name: fetched.name,
+        price: fetched.price,
+        image: fetched.images?.[0]?.url,
+        stock: fetched.stock,
         quantity: quantity
       }
 
-      const isItemExist = state.cartItems.find(i => i.product === item.product)
-
-      setState({
-        ...state,
-        cartItems: [...state.cartItems, item]
-      })
-      if (isItemExist) {
-        setState({
-          ...state,
-          cartItems: state.cartItems.map(i => i.product === isItemExist.product ? item : i)
-        })
-      }
-      else {
-        setState({
-          ...state,
-          cartItems: [...state.cartItems, item]
-        })
-      }
-
-      toast.success('Item Added to Cart', {
-        position: 'bottom-right'
+      setState(prev => {
+        const existing = prev.cartItems.find(i => i.product === newItem.product)
+        let nextCart
+        if (existing) {
+          // Increment quantity for existing item
+          nextCart = prev.cartItems.map(i =>
+            i.product === newItem.product
+              ? { ...i, quantity: i.quantity + quantity }
+              : i
+          )
+        } else {
+          nextCart = [...prev.cartItems, newItem]
+        }
+        return { ...prev, cartItems: nextCart }
       })
 
+      toast.success('Item added to cart', { position: 'bottom-right' })
     } catch (error) {
-      toast.error(error, {
-        position: 'top-left'
-      });
-
+      const message = error?.response?.data?.message || String(error)
+      toast.error(message, { position: 'top-left' })
     }
-
   }
   const removeItemFromCart = async (id) => {
     setState({
@@ -162,6 +154,7 @@ function App() {
           <Route path="/password/forgot" element={<ForgotPassword />} exact="true" />
           <Route path="/password/reset/:token" element={<NewPassword />} exact="true" />
           <Route path="/verify-email/:token" element={<EmailVerification />} exact="true" />
+          <Route path="/firebase-auth" element={<FirebaseAuth />} exact="true" />
           <Route path="/me" element={
             <ProtectedRoute>
               <Profile />

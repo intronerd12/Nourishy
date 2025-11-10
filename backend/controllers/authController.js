@@ -106,6 +106,8 @@ exports.registerUser = async (req, res, next) => {
     }
 };
 
+const { cloudinary } = require('../config/cloudinary');
+
 // Update user profile => /api/v1/me/update
 exports.updateProfile = async (req, res, next) => {
     try {
@@ -114,42 +116,69 @@ exports.updateProfile = async (req, res, next) => {
             email: req.body.email
         };
 
-        // Update avatar if provided
-        if (req.body.avatar && req.body.avatar !== '') {
-            const user = await User.findById(req.user.id);
-            
-            // For now, we'll just store the avatar as provided
-            // In a production app, you'd want to upload to Cloudinary
+        const currentUser = await User.findById(req.user.id);
+        if (!currentUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Handle avatar update via file upload, base64, or direct URL
+        let uploadedAvatar = null;
+        try {
+            if (req.file) {
+                // Binary file uploaded via multer
+                uploadedAvatar = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'avatars',
+                    resource_type: 'image',
+                    transformation: [{ width: 300, height: 300, crop: 'fill' }]
+                });
+            } else if (req.body.avatar && typeof req.body.avatar === 'string') {
+                const avatarStr = req.body.avatar;
+                if (avatarStr.startsWith('data:')) {
+                    // Base64 data URL uploaded directly
+                    uploadedAvatar = await cloudinary.uploader.upload(avatarStr, {
+                        folder: 'avatars',
+                        resource_type: 'image',
+                        transformation: [{ width: 300, height: 300, crop: 'fill' }]
+                    });
+                } else if (avatarStr.trim() !== '') {
+                    // Plain URL provided, just store it
+                    newUserData.avatar = {
+                        public_id: currentUser.avatar?.public_id || 'external_url',
+                        url: avatarStr
+                    };
+                }
+            }
+        } catch (uploadErr) {
+            console.error('Avatar upload error:', uploadErr);
+            return res.status(500).json({ success: false, message: 'Avatar upload failed' });
+        }
+
+        // If we uploaded a new image to Cloudinary, optionally remove old one and set new
+        if (uploadedAvatar) {
+            // Destroy old avatar if it exists and is not a default placeholder
+            if (currentUser.avatar?.public_id && !currentUser.avatar.public_id.startsWith('default_')) {
+                try { await cloudinary.uploader.destroy(currentUser.avatar.public_id); } catch (e) { /* ignore */ }
+            }
             newUserData.avatar = {
-                public_id: user.avatar?.public_id || 'default_avatar',
-                url: req.body.avatar
+                public_id: uploadedAvatar.public_id,
+                url: uploadedAvatar.secure_url || uploadedAvatar.url
             };
         }
 
-        const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+        const updatedUser = await User.findByIdAndUpdate(req.user.id, newUserData, {
             new: true,
             runValidators: true,
             useFindAndModify: false
         });
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
         res.status(200).json({
             success: true,
             message: 'Profile updated successfully',
-            user
+            user: updatedUser
         });
     } catch (error) {
         console.error('Update profile error:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

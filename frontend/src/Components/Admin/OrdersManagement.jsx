@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { getToken } from '../../utils/helpers';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/AdminOrders.css';
 
 const statusOptions = ['Pending', 'Confirmed', 'Cancelled', 'Delivered'];
@@ -26,17 +26,13 @@ const OrdersManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState({}); // map of orderId => boolean
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       setError('');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
-      };
-      const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/orders`, config);
+      const { data } = await axios.get(`/admin/orders`);
       if (data.success) {
         setOrders(data.orders || []);
       } else {
@@ -52,20 +48,17 @@ const OrdersManagement = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (isAuthenticated && !authLoading) {
+      fetchOrders();
+    }
+  }, [isAuthenticated, authLoading]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       setUpdating(prev => ({ ...prev, [orderId]: true }));
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
-        },
-      };
+      const config = { headers: { 'Content-Type': 'application/json' } };
       const { data } = await axios.put(
-        `${import.meta.env.VITE_API}/admin/order/${orderId}`,
+        `/admin/order/${orderId}`,
         { status: newStatus },
         config
       );

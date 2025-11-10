@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Modal, Button, Badge } from 'react-bootstrap';
-import { getToken } from '../../utils/helpers';
+import { useAuth } from '../../contexts/AuthContext';
 
 const UsersManagement = () => {
     const [users, setUsers] = useState([]);
@@ -13,20 +13,17 @@ const UsersManagement = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [updatingRole, setUpdatingRole] = useState({}); // { [userId]: boolean }
     const [deletingUser, setDeletingUser] = useState({}); // { [userId]: boolean }
+    const { isAuthenticated, loading: authLoading } = useAuth();
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        if (isAuthenticated && !authLoading) {
+            fetchUsers();
+        }
+    }, [isAuthenticated, authLoading]);
 
     const fetchUsers = async () => {
         try {
-            const config = {
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`
-                },
-                withCredentials: true
-            };
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/admin/users`, config);
+            const { data } = await axios.get(`/admin/users`);
             setUsers(data.users || []);
             setLoading(false);
         } catch (error) {
@@ -39,14 +36,9 @@ const UsersManagement = () => {
     const handleRoleChange = async (userId, newRole) => {
         try {
             setUpdatingRole(prev => ({ ...prev, [userId]: true }));
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            };
+            const config = { headers: { 'Content-Type': 'application/json' } };
 
-            await axios.put(`${import.meta.env.VITE_API}/admin/user/${userId}`, { role: newRole }, config);
+            await axios.put(`/admin/user/${userId}`, { role: newRole }, config);
             // Re-sync with server to reflect DB state
             await fetchUsers();
             
@@ -63,13 +55,7 @@ const UsersManagement = () => {
         if (window.confirm('Are you sure you want to delete this user?')) {
             try {
                 setDeletingUser(prev => ({ ...prev, [userId]: true }));
-                const config = {
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    }
-                };
-
-                await axios.delete(`${import.meta.env.VITE_API}/admin/user/${userId}`, config);
+                await axios.delete(`/admin/user/${userId}`);
                 // Re-sync with server to reflect DB state
                 await fetchUsers();
                 toast.success('User deleted successfully');

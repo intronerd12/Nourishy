@@ -14,13 +14,14 @@ const {
 
 const { isAuthenticatedUser } = require('../middlewares/auth');
 const { authorizeRoles } = require('../middlewares/auth');
+const { upload } = require('../middlewares/upload');
 const { getAllUsers, updateUserRole, deleteUser } = require('../controllers/authController');
 
 router.route('/register').post(registerUser);
 router.route('/login').post(loginUser);
 router.route('/logout').post(logout);
 router.route('/me').get(isAuthenticatedUser, getUserProfile);
-router.route('/me/update').put(isAuthenticatedUser, updateProfile);
+router.route('/me/update').put(isAuthenticatedUser, upload.single('avatar'), updateProfile);
 
 // Email verification routes
 router.route('/verify-email/:token').get(verifyEmail);

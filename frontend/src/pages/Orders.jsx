@@ -5,7 +5,7 @@ import axios from 'axios'
 import MetaData from '../Components/Layout/MetaData'
 import Loader from '../Components/Layout/Loader'
 import { toast } from 'react-toastify'
-import { getToken } from '../utils/helpers'
+import { useAuth } from '../contexts/AuthContext'
 import '../styles/Orders.css'
 
 const Orders = () => {
@@ -20,23 +20,20 @@ const Orders = () => {
     const [rating, setRating] = useState(0)
     const [comment, setComment] = useState('')
 
-    // Mock data for demonstration - replace with actual API calls
+    const { loading: authLoading, isAuthenticated, user } = useAuth()
+
     useEffect(() => {
-        fetchOrders()
-    }, [])
+        if (!authLoading && isAuthenticated) {
+            fetchOrders()
+        }
+    }, [authLoading, isAuthenticated])
 
     const fetchOrders = async () => {
         try {
             setLoading(true)
             setError('')
             
-            const config = {
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`
-                }
-            }
-            
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/orders/me`, config)
+            const { data } = await axios.get(`/orders/me`)
             
             if (data.success) {
                 // Map backend data structure to frontend expectations
@@ -47,17 +44,21 @@ const Orders = () => {
                     status: order.orderStatus.toLowerCase(),
                     totalAmount: order.totalPrice,
                     items: order.orderItems.map(item => ({
+                        itemId: item._id,
+                        productId: item.product,
                         name: item.name,
                         quantity: item.quantity,
                         price: item.price,
                         image: item.image,
-                        reviewed: false // Default to false, can be enhanced later
+                        reviewed: false
                     })),
                     deliveryAddress: `${order.shippingInfo.address}, ${order.shippingInfo.city}, ${order.shippingInfo.country}`,
                     paymentMethod: order.paymentInfo?.status === 'succeeded' ? 'Card Payment' : 'Cash on Delivery'
                 }))
                 
-                setOrders(mappedOrders)
+                // Hydrate review status per product for the current user
+                const hydrated = await hydrateReviewStatus(mappedOrders)
+                setOrders(hydrated)
             } else {
                 setError('Failed to fetch orders')
                 toast.error('Failed to fetch orders')
@@ -68,6 +69,39 @@ const Orders = () => {
             setError(error.response?.data?.message || 'Failed to fetch orders')
             setLoading(false)
             toast.error(error.response?.data?.message || 'Failed to fetch orders')
+        }
+    }
+
+    // Fetch reviews for unique products and mark items reviewed by current user
+    const hydrateReviewStatus = async (ordersList) => {
+        try {
+            const uid = user?._id
+            if (!uid) return ordersList
+
+            const productIds = Array.from(new Set(
+                ordersList.flatMap(o => (o.items || []).map(i => i.productId)).filter(Boolean)
+            ))
+
+            const reviewMap = {}
+            await Promise.all(productIds.map(async (pid) => {
+                try {
+                    const { data } = await axios.get('/reviews', { params: { productId: pid } })
+                    const reviews = data?.product?.reviews || []
+                    reviewMap[pid] = reviews.some(r => String(r.user) === String(uid))
+                } catch (e) {
+                    reviewMap[pid] = false
+                }
+            }))
+
+            return ordersList.map(order => ({
+                ...order,
+                items: (order.items || []).map(item => ({
+                    ...item,
+                    reviewed: Boolean(reviewMap[item.productId])
+                }))
+            }))
+        } catch (e) {
+            return ordersList
         }
     }
 
@@ -127,8 +161,28 @@ const Orders = () => {
         }
     }
 
-    const handleReviewProduct = (product, order) => {
+    const handleReviewProduct = async (product, order) => {
         setSelectedProduct({ ...product, orderId: order._id })
+        try {
+            // If already reviewed, prefill existing rating/comment
+            if (product.reviewed && user?._id) {
+                const { data } = await axios.get('/reviews', { params: { productId: product.productId } })
+                const existing = (data?.product?.reviews || []).find(r => String(r.user) === String(user._id))
+                if (existing) {
+                    setRating(Number(existing.rating) || 0)
+                    setComment(String(existing.comment || ''))
+                } else {
+                    setRating(0)
+                    setComment('')
+                }
+            } else {
+                setRating(0)
+                setComment('')
+            }
+        } catch (e) {
+            setRating(0)
+            setComment('')
+        }
         setShowReviewModal(true)
     }
 
@@ -138,12 +192,10 @@ const Orders = () => {
                 toast.error('Please select a rating')
                 return
             }
-
-            // Mock API call - replace with actual endpoint
-            console.log(`Submitting review for product ${selectedProduct._id}:`, {
+            await axios.put('/review', {
+                productId: selectedProduct.productId,
                 rating,
-                comment,
-                orderId: selectedProduct.orderId
+                comment
             })
 
             // Update local state to mark product as reviewed
@@ -152,7 +204,7 @@ const Orders = () => {
                     ? {
                         ...order,
                         items: order.items.map(item =>
-                            item._id === selectedProduct._id
+                            item.productId === selectedProduct.productId
                                 ? { ...item, reviewed: true }
                                 : item
                         )
@@ -166,7 +218,7 @@ const Orders = () => {
             setComment('')
             setSelectedProduct(null)
         } catch (error) {
-            toast.error('Failed to submit review')
+            toast.error(error.response?.data?.message || 'Failed to submit review')
         }
     }
 
@@ -243,10 +295,14 @@ const Orders = () => {
                                                                 {(order.status === 'delivered') && (
                                                                     <div className="mt-2">
                                                                         {item.reviewed ? (
-                                                                            <Badge bg="success" className="me-2">
-                                                                                <i className="fas fa-check me-1"></i>
-                                                                                Reviewed
-                                                                            </Badge>
+                                                                            <Button
+                                                                                variant="outline-secondary"
+                                                                                size="sm"
+                                                                                onClick={() => handleReviewProduct(item, order)}
+                                                                            >
+                                                                                <i className="fas fa-edit me-1"></i>
+                                                                                Update Review
+                                                                            </Button>
                                                                         ) : (
                                                                             <Button
                                                                                 variant="outline-warning"
@@ -307,16 +363,7 @@ const Orders = () => {
                                                             </Button>
                                                         )}
                                                         
-                                                        <Button 
-                                                            variant="outline-primary" 
-                                                            size="sm" 
-                                                            className="mb-2"
-                                                            as={Link}
-                                                            to={`/order-details/${order._id}`}
-                                                        >
-                                                            <i className="fas fa-eye me-1"></i>
-                                                            View Details
-                                                        </Button>
+                                                        {/* Removed View Details button as requested */}
                                                     </div>
                                                 </div>
                                             </Col>
@@ -362,7 +409,7 @@ const Orders = () => {
                 {/* Review Modal */}
                 <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered>
                     <Modal.Header closeButton>
-                        <Modal.Title>Write a Review</Modal.Title>
+                        <Modal.Title>{selectedProduct?.reviewed ? 'Update Review' : 'Write a Review'}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         {selectedProduct && (
