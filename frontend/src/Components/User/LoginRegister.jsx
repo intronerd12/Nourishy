@@ -289,7 +289,7 @@ const LoginRegister = () => {
                                                 className="btn btn-lg w-100 fw-semibold mb-3"
                                                 disabled={loading}
                                                 style={{
-                                                    background: 'linear-gradient(135deg, var(--emerald-600), var(--emerald-500))',
+                                                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                                                     border: 'none',
                                                     color: 'white',
                                                     borderRadius: '0.75rem',
@@ -450,7 +450,7 @@ const LoginRegister = () => {
                                                 className="btn btn-lg w-100 fw-semibold mb-3"
                                                 disabled={loading}
                                                 style={{
-                                                    background: 'linear-gradient(135deg, var(--emerald-600), var(--emerald-500))',
+                                                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                                                     border: 'none',
                                                     color: 'white',
                                                     borderRadius: '0.75rem',

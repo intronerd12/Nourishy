@@ -47,6 +47,9 @@ const Header = ({cartItems}) => {
                             <li className="nav-item">
                                 <Link className="nav-link" to="/">Home</Link>
                             </li>
+                            <li className="nav-item">
+                                {/* UI Showcase removed per Unit 2 requirement */}
+                            </li>
                             {!isOnAuthPage && isAuthenticated && (
                                 <>
                                     <li className="nav-item">

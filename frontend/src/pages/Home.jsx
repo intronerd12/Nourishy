@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import Pagination from '@mui/material/Pagination'
 import Stack from '@mui/material/Stack'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import Snackbar from '@mui/material/Snackbar'
+import Alert from '@mui/material/Alert'
 import Product from '../Components/Product/Product'
 import MetaData from '../Components/Layout/MetaData'
 import Loader from '../Components/Layout/Loader'
@@ -13,6 +17,20 @@ import { useAuth } from "../contexts/AuthContext";
 const Home = () => {
     const [featuredProducts, setFeaturedProducts] = useState([])
     const [loading, setLoading] = useState(true)
+    // All products for homepage list (pagination/infinite scroll)
+    const [allProducts, setAllProducts] = useState([])
+    const [allLoading, setAllLoading] = useState(true)
+    const [viewMode, setViewMode] = useState('pagination') // 'pagination' | 'infinite'
+    const [page, setPage] = useState(1)
+    const perPage = 8
+    const [visibleCount, setVisibleCount] = useState(perPage)
+    const sentinelRef = useRef(null)
+
+    // Newsletter (MUI components)
+    const [newsletterEmail, setNewsletterEmail] = useState('')
+    const [newsletterOpen, setNewsletterOpen] = useState(false)
+    const [newsletterSeverity, setNewsletterSeverity] = useState('success')
+    const [newsletterMessage, setNewsletterMessage] = useState('')
 
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
@@ -23,9 +41,46 @@ const Home = () => {
         setLoading(false)
     }
 
+    const getAllProducts = async () => {
+        try {
+            const res = await axios.get('/products')
+            setAllProducts(res.data.products || [])
+        } catch (err) {
+            setAllProducts([])
+        } finally {
+            setAllLoading(false)
+        }
+    }
+
     useEffect(() => {
         getFeaturedProducts()
+        getAllProducts()
     }, []);
+
+    // Reset counters when switching modes or when product count changes
+    useEffect(() => {
+        setVisibleCount(perPage)
+        setPage(1)
+    }, [viewMode, allProducts.length])
+
+    // Infinite scroll observer
+    useEffect(() => {
+        if (viewMode !== 'infinite') return
+        const node = sentinelRef.current
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    setVisibleCount((prev) => Math.min(prev + perPage, allProducts.length))
+                }
+            },
+            { root: null, rootMargin: '300px', threshold: 0.1 }
+        )
+
+        if (node) observer.observe(node)
+        return () => {
+            if (node) observer.unobserve(node)
+        }
+    }, [viewMode, allProducts.length])
 
     // Helper function to handle guest redirection
     const handleGuestRedirection = (e, targetPath = '/search') => {
@@ -38,6 +93,23 @@ const Home = () => {
         }
         return true;
     };
+
+    // Handle newsletter subscribe using MUI components
+    const handleNewsletterSubmit = (e) => {
+        e.preventDefault()
+        const email = newsletterEmail.trim()
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+            setNewsletterSeverity('error')
+            setNewsletterMessage('Please enter a valid email address.')
+            setNewsletterOpen(true)
+            return
+        }
+        setNewsletterSeverity('success')
+        setNewsletterMessage('Subscribed! Check your inbox for a welcome message.')
+        setNewsletterOpen(true)
+        setNewsletterEmail('')
+    }
 
     // Fallback images for products (high-quality hair product images)
     const fallbackImages = {
@@ -111,13 +183,13 @@ const Home = () => {
                                     to="/search" 
                                     className="btn btn-lg px-5 py-3 fw-semibold position-relative overflow-hidden" 
                                     style={{
-                                        background: 'linear-gradient(135deg, var(--emerald-600), var(--emerald-500))',
+                                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                                         border: 'none',
                                         borderRadius: '12px',
                                         color: 'white',
                                         textDecoration: 'none',
                                         transition: 'all 0.3s ease',
-                                        boxShadow: '0 8px 25px rgba(16, 185, 129, 0.3)'
+                                        boxShadow: '0 8px 25px rgba(var(--primary-rgb), 0.3)'
                                     }}
                                     onClick={(e) => handleGuestRedirection(e, '/search')}
                                 >
@@ -128,10 +200,11 @@ const Home = () => {
                                 </Link>
                                 <Link 
                                     to="/search" 
-                                    className="btn btn-outline-dark btn-lg px-5 py-3 fw-semibold" 
+                                    className="btn btn-outline-primary btn-lg px-5 py-3 fw-semibold" 
                                     style={{
                                         borderRadius: '12px',
                                         borderWidth: '2px',
+                                        color: 'var(--primary)',
                                         transition: 'all 0.3s ease'
                                     }}
                                     onClick={(e) => handleGuestRedirection(e, '/search')}
@@ -357,22 +430,22 @@ const Home = () => {
                                 to="/shop" 
                                 className="btn btn-lg px-5 py-3 fw-semibold" 
                                 style={{
-                                    background: 'linear-gradient(135deg, #059669, #10b981)',
+                                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                                     border: 'none',
                                     borderRadius: '12px',
                                     color: 'white',
                                     textDecoration: 'none',
                                     transition: 'all 0.3s ease',
-                                    boxShadow: '0 8px 25px rgba(5, 150, 105, 0.3)',
+                                    boxShadow: '0 8px 25px rgba(var(--primary-rgb), 0.3)',
                                     fontSize: '1.1rem'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.target.style.transform = 'translateY(-3px)'
-                                    e.target.style.boxShadow = '0 12px 35px rgba(5, 150, 105, 0.4)'
+                                    e.target.style.boxShadow = '0 12px 35px rgba(var(--primary-rgb), 0.4)'
                                 }}
                                 onMouseLeave={(e) => {
                                     e.target.style.transform = 'translateY(0)'
-                                    e.target.style.boxShadow = '0 8px 25px rgba(5, 150, 105, 0.3)'
+                                    e.target.style.boxShadow = '0 8px 25px rgba(var(--primary-rgb), 0.3)'
                                 }}
                             >
                                 <span className="d-flex align-items-center">
@@ -529,19 +602,19 @@ const Home = () => {
                                                     to={`/product/${product._id}`} 
                                                     className="btn btn-primary fw-semibold py-2"
                                                     style={{
-                                                        background: 'linear-gradient(135deg, #059669, #10b981)',
+                                                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                                                         border: 'none',
                                                         borderRadius: '12px',
                                                         transition: 'all 0.3s ease',
-                                                        boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
+                                                        boxShadow: '0 4px 12px rgba(var(--primary-rgb), 0.3)'
                                                     }}
                                                     onMouseEnter={(e) => {
                                                         e.target.style.transform = 'translateY(-2px)'
-                                                        e.target.style.boxShadow = '0 6px 20px rgba(5, 150, 105, 0.4)'
+                                                        e.target.style.boxShadow = '0 6px 20px rgba(var(--primary-rgb), 0.4)'
                                                     }}
                                                     onMouseLeave={(e) => {
                                                         e.target.style.transform = 'translateY(0)'
-                                                        e.target.style.boxShadow = '0 4px 12px rgba(5, 150, 105, 0.3)'
+                                                        e.target.style.boxShadow = '0 4px 12px rgba(var(--primary-rgb), 0.3)'
                                                     }}
                                                     onClick={(e) => handleGuestRedirection(e, `/product/${product._id}`)}
                                                 >
@@ -555,6 +628,84 @@ const Home = () => {
                         ))}
                     </div>
 
+
+                </div>
+            </section>
+
+            {/* All Products: Pagination / Infinite Scroll */}
+            <section className="py-5" style={{ background: '#ffffff' }}>
+                <div className="container">
+                    <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                        <h3 className="fw-bold mb-3 mb-md-0">All Products</h3>
+                        <div className="btn-group" role="group" aria-label="View mode">
+                            <button
+                                type="button"
+                                className={`btn ${viewMode === 'pagination' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                onClick={() => setViewMode('pagination')}
+                            >
+                                Pagination
+                            </button>
+                            <button
+                                type="button"
+                                className={`btn ${viewMode === 'infinite' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                onClick={() => setViewMode('infinite')}
+                            >
+                                Infinite Scroll
+                            </button>
+                        </div>
+                    </div>
+
+                    {allLoading ? (
+                        <div className="text-center py-5">
+                            <Loader />
+                        </div>
+                    ) : (
+                        <>
+                            <div className="row g-4">
+                                {(viewMode === 'pagination'
+                                    ? allProducts.slice((page - 1) * perPage, page * perPage)
+                                    : allProducts.slice(0, visibleCount)
+                                ).map((product) => (
+                                    <div key={product._id} className="col-12 col-sm-6 col-lg-3">
+                                        <div className="card border-0 h-100" style={{ borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+                                            <img
+                                                src={product.images && product.images.length > 0 ? product.images[0].url : fallbackImages[product.category] || fallbackImages['Shampoo']}
+                                                alt={product.name}
+                                                className="card-img-top"
+                                                style={{ height: '240px', objectFit: 'cover', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
+                                                onError={(e) => { e.target.src = fallbackImages[product.category] || fallbackImages['Shampoo'] }}
+                                            />
+                                            <div className="card-body d-flex flex-column">
+                                                <span className="badge bg-light text-primary mb-2 align-self-start" style={{ fontSize: '0.7rem' }}>{product.category}</span>
+                                                <h6 className="fw-bold mb-2" style={{ color: '#1f2937' }}>{product.name}</h6>
+                                                <div className="d-flex justify-content-between align-items-center mt-auto">
+                                                    <span className="h6 fw-bold text-primary mb-0">₱{product.price}</span>
+                                                    <Link to={`/product/${product._id}`} className="btn btn-outline-primary btn-sm" onClick={(e) => handleGuestRedirection(e, `/product/${product._id}`)}>
+                                                        View
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {viewMode === 'pagination' && (
+                                <Stack spacing={2} className="mt-4 d-flex justify-content-center">
+                                    <Pagination
+                                        count={Math.ceil(allProducts.length / perPage) || 1}
+                                        page={page}
+                                        onChange={(e, value) => setPage(value)}
+                                        color="primary"
+                                    />
+                                </Stack>
+                            )}
+
+                            {viewMode === 'infinite' && visibleCount < allProducts.length && (
+                                <div ref={sentinelRef} className="mt-3" style={{ height: '1px' }} />
+                            )}
+                        </>
+                    )}
 
                 </div>
             </section>
@@ -621,66 +772,40 @@ const Home = () => {
                                 Join thousands of satisfied customers on their beauty journey.
                             </p>
                             
-                            {/* Email Form */}
-                            <div 
-                                className="d-flex flex-column flex-sm-row gap-3"
-                                style={{
-                                    animation: 'fadeInUp 0.8s ease-out 0.6s both'
-                                }}
+                            {/* Email Form (MUI) */}
+                            <Box 
+                                component="form" 
+                                onSubmit={handleNewsletterSubmit}
+                                sx={{ animation: 'fadeInUp 0.8s ease-out 0.6s both' }}
                             >
-                                <div className="flex-grow-1">
-                                    <input 
-                                        type="email" 
-                                        placeholder="Enter your email address" 
-                                        className="form-control form-control-lg"
-                                        style={{
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                                    <TextField
+                                        fullWidth
+                                        size="medium"
+                                        label="Email address"
+                                        placeholder="Enter your email address"
+                                        value={newsletterEmail}
+                                        onChange={(e) => setNewsletterEmail(e.target.value)}
+                                        variant="outlined"
+                                        sx={{
+                                            bgcolor: 'rgba(255, 255, 255, 0.95)',
                                             borderRadius: '16px',
-                                            border: 'none',
-                                            padding: '16px 20px',
-                                            fontSize: '1rem',
-                                            background: 'rgba(255, 255, 255, 0.95)',
-                                            backdropFilter: 'blur(10px)',
-                                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                                            transition: 'all 0.3s ease'
-                                        }}
-                                        onFocus={(e) => {
-                                            e.target.style.transform = 'translateY(-2px)'
-                                            e.target.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)'
-                                        }}
-                                        onBlur={(e) => {
-                                            e.target.style.transform = 'translateY(0)'
-                                            e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)'
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '16px',
+                                            }
                                         }}
                                     />
-                                </div>
-                                <button 
-                                    className="btn btn-light btn-lg px-4 fw-semibold"
-                                    style={{
-                                        borderRadius: '16px',
-                                        border: 'none',
-                                        padding: '16px 32px',
-                                        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                                        color: '#059669',
-                                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                                        transition: 'all 0.3s ease',
-                                        minWidth: '140px'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.transform = 'translateY(-3px)'
-                                        e.target.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.2)'
-                                        e.target.style.background = 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)'
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.transform = 'translateY(0)'
-                                        e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)'
-                                        e.target.style.background = 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
-                                    }}
-                                    onClick={(e) => handleGuestRedirection(e, '/loginregister')}
-                                >
-                                    Subscribe
-                                    <i className="fa fa-paper-plane ms-2"></i>
-                                </button>
-                            </div>
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        color="success"
+                                        size="large"
+                                        sx={{ borderRadius: '16px', px: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
+                                    >
+                                        Subscribe
+                                    </Button>
+                                </Stack>
+                            </Box>
                             
                             {/* Trust Indicators */}
                             <div 
@@ -758,6 +883,16 @@ const Home = () => {
                     </div>
                 </div>
             </section>
+            <Snackbar
+                open={newsletterOpen}
+                autoHideDuration={3000}
+                onClose={() => setNewsletterOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setNewsletterOpen(false)} severity={newsletterSeverity} sx={{ width: '100%' }}>
+                    {newsletterMessage}
+                </Alert>
+            </Snackbar>
         </>
     )
 }

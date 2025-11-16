@@ -210,6 +210,7 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
+          
         </Routes>
 
       </Router>
