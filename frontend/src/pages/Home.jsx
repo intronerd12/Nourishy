@@ -18,10 +18,7 @@ const Home = () => {
     const navigate = useNavigate();
 
     const getFeaturedProducts = async () => {
-        const base = import.meta.env.VITE_API;
-        const link = `${base}/products/featured`
-        let res = await axios.get(link)
-        console.log(res)
+        const res = await axios.get('/products/featured')
         setFeaturedProducts(res.data.products)
         setLoading(false)
     }

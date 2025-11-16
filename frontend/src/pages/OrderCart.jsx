@@ -60,7 +60,7 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
     const fetchProducts = async () => {
         try {
             setLoading(true)
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/products`)
+            const { data } = await axios.get('/products')
             setProducts(data.products || [])
             setLoading(false)
         } catch (error) {
@@ -119,6 +119,33 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
         toast.success(`${product.name} added to order!`, {
             position: 'bottom-right'
         })
+    }
+
+    // Safely update quantity for a selected product in the order summary
+    const updateQuantity = (productId, size, newQuantity) => {
+        setSelectedProducts(prev => {
+            return prev.map(item => {
+                const itemSize = item?.size ?? 'Standard'
+                const targetSize = size ?? 'Standard'
+                if (item?._id === productId && itemSize === targetSize) {
+                    const qty = Math.max(1, Number(newQuantity ?? item?.quantity ?? 1))
+                    return { ...item, quantity: qty }
+                }
+                return item
+            })
+        })
+    }
+
+    // Safely remove a selected product from the order summary
+    const removeFromOrder = (productId, size) => {
+        setSelectedProducts(prev => {
+            return prev.filter(item => {
+                const itemSize = item?.size ?? 'Standard'
+                const targetSize = size ?? 'Standard'
+                return !(item?._id === productId && itemSize === targetSize)
+            })
+        })
+        toast.info('Item removed from order summary', { position: 'bottom-right' })
     }
 
     // Calculate custom price based on size
@@ -691,7 +718,7 @@ const OrderCart = ({ addItemToCart, cartItems, removeItemFromCart, saveShippingI
                                             <div className="order-items">
                                                 {selectedProducts.map((item, index) => (
                                                     <OrderSummaryItem 
-                                                        key={`${item._id}-${item.size}`}
+                                                        key={`${(item?._id ?? index)}-${(item?.size ?? 'Standard')}`}
                                                         item={item}
                                                         updateQuantity={updateQuantity}
                                                         removeFromOrder={removeFromOrder}
@@ -849,37 +876,37 @@ const OrderSummaryItem = ({ item, updateQuantity, removeFromOrder, getProductIma
     return (
         <div className="order-summary-item">
             <div className="item-image">
-                <img src={getProductImage(item)} alt={item.name} />
+                <img src={getProductImage(item || {})} alt={item?.name ?? 'Product'} />
             </div>
             <div className="item-details">
-                <h6 className="item-name">{item.name}</h6>
-                <p className="item-size text-muted small">{item.size}</p>
+                <h6 className="item-name">{item?.name ?? 'Product'}</h6>
+                <p className="item-size text-muted small">{item?.size ?? 'Standard'}</p>
                 <div className="item-controls">
                     <div className="quantity-controls">
                         <button 
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => updateQuantity(item._id, item.size, item.quantity - 1)}
+                            onClick={() => updateQuantity(item?._id, (item?.size ?? 'Standard'), (Number(item?.quantity ?? 1) - 1))}
                         >
                             -
                         </button>
-                        <span className="quantity">{item.quantity}</span>
+                        <span className="quantity">{Number(item?.quantity ?? 1)}</span>
                         <button 
                             className="btn btn-sm btn-outline-secondary"
-                            onClick={() => updateQuantity(item._id, item.size, item.quantity + 1)}
+                            onClick={() => updateQuantity(item?._id, (item?.size ?? 'Standard'), (Number(item?.quantity ?? 1) + 1))}
                         >
                             +
                         </button>
                     </div>
                     <button 
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => removeFromOrder(item._id, item.size)}
+                        onClick={() => removeFromOrder(item?._id, (item?.size ?? 'Standard'))}
                     >
                         <i className="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
             <div className="item-price">
-                <span className="price">₱{(item.customPrice * item.quantity).toLocaleString()}</span>
+                <span className="price">₱{(Number(item?.customPrice ?? item?.price ?? 0) * Number(item?.quantity ?? 1)).toLocaleString()}</span>
             </div>
         </div>
     )
@@ -922,9 +949,9 @@ const OrderConfirmationModal = ({ show, onHide, orderSummary, confirmOrder }) =>
                             <h6 className="text-primary mb-3">Order Items</h6>
                             {orderSummary.products.map((item, index) => (
                                 <div key={index} className="confirmation-item">
-                                    <span>{item.name} ({item.size})</span>
-                                    <span>Qty: {item.quantity}</span>
-                                    <span>₱{(Number((item.customPrice ?? item.price)) * Number(item.quantity)).toLocaleString()}</span>
+                                    <span>{item?.name ?? 'Item'} ({item?.size ?? 'Standard'})</span>
+                                    <span>Qty: {Number(item?.quantity ?? 1)}</span>
+                                    <span>₱{(Number(item?.customPrice ?? item?.price ?? 0) * Number(item?.quantity ?? 1)).toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>

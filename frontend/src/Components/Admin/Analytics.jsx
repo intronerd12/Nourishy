@@ -30,14 +30,20 @@ const Analytics = () => {
     });
     const [granularity, setGranularity] = useState('month');
     const [loading, setLoading] = useState(false);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [chartType, setChartType] = useState('line');
 
     // Fetch real analytics data from backend
     useEffect(() => {
         const fetchAnalytics = async () => {
             try {
                 setLoading(true);
-                // Rely on axios defaults set by AuthContext (Authorization: Bearer <idToken>)
-                const { data } = await axios.get(`/admin/analytics?granularity=${granularity}`);
+                const params = new URLSearchParams();
+                params.set('granularity', granularity);
+                if (startDate) params.set('startDate', startDate);
+                if (endDate) params.set('endDate', endDate);
+                const { data } = await axios.get(`/admin/analytics?${params.toString()}`);
                 if (data?.success) {
                     setSalesData(Array.isArray(data.salesData) ? data.salesData : []);
                     setProductStats(Array.isArray(data.productStats) ? data.productStats : []);
@@ -50,7 +56,6 @@ const Analytics = () => {
                     });
                 }
             } catch (err) {
-                // Fallback to empty data if API fails
                 setSalesData([]);
                 setProductStats([]);
                 setUserStats([]);
@@ -59,12 +64,10 @@ const Analytics = () => {
                 setLoading(false);
             }
         };
-
-        // Only fetch when authenticated and auth context has finished loading
         if (isAuthenticated && !authLoading) {
             fetchAnalytics();
         }
-    }, [granularity, isAuthenticated, authLoading]);
+    }, [granularity, startDate, endDate, isAuthenticated, authLoading]);
 
     const formatCurrency = (value) => `₱${value.toLocaleString()}`;
 
@@ -200,7 +203,7 @@ const Analytics = () => {
                             <h3 className="chart-title">Sales Trend</h3>
                             <p className="chart-subtitle">Revenue and orders by period</p>
                         </div>
-                        <div className="chart-actions">
+                        <div className="chart-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                             <select
                                 className="select select-sm"
                                 value={granularity}
@@ -210,6 +213,29 @@ const Analytics = () => {
                                 <option value="week">Week</option>
                                 <option value="month">Month</option>
                                 <option value="year">Year</option>
+                            </select>
+                            <input
+                                type="date"
+                                className="select select-sm"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                aria-label="Start date"
+                            />
+                            <input
+                                type="date"
+                                className="select select-sm"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                aria-label="End date"
+                            />
+                            <select
+                                className="select select-sm"
+                                value={chartType}
+                                onChange={(e) => setChartType(e.target.value)}
+                                aria-label="Select chart type"
+                            >
+                                <option value="line">Line</option>
+                                <option value="bar">Bar</option>
                             </select>
                         </div>
                     </div>

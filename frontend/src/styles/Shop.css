@@ -44,7 +44,7 @@
 
 /* Hero Section Modern Design */
 .hero-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #1a5f3f 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary-dark) 100%);
     position: relative;
     overflow: hidden;
 }
@@ -246,7 +246,7 @@
 
 /* Enhanced Star Rating */
 .star-rating {
-    color: #ffc107;
+    color: var(--yellow);
     font-size: 0.95rem;
     margin-bottom: 12px;
     display: flex;

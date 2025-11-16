@@ -9,7 +9,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import * as Yup from 'yup'
 
 const LoginRegister = () => {
-    const { login, register, loading, isAuthenticated, user } = useAuth()
+    const { login, register, loginWithGoogle, loading, isAuthenticated, user } = useAuth()
     
     const [loginData, setLoginData] = useState({
         email: '',
@@ -319,6 +319,38 @@ const LoginRegister = () => {
                                                 )}
                                             </button>
                                             
+                                            <div className="d-flex align-items-center my-3">
+                                                <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
+                                                <span className="px-3 text-muted">or</span>
+                                                <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-lg w-100 fw-semibold mb-2"
+                                                disabled={loading}
+                                                onClick={() => loginWithGoogle && loginWithGoogle()}
+                                                style={{
+                                                    background: '#ffffff',
+                                                    border: '2px solid var(--emerald-200)',
+                                                    color: 'var(--gray-800)',
+                                                    borderRadius: '0.75rem',
+                                                    padding: '0.75rem 1rem',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.transform = 'translateY(-2px)'
+                                                    e.target.style.borderColor = 'var(--emerald-400)'
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.transform = 'translateY(0)'
+                                                    e.target.style.borderColor = 'var(--emerald-200)'
+                                                }}
+                                            >
+                                                <i className="fab fa-google me-2" style={{ color: '#DB4437' }}></i>
+                                                Continue with Google
+                                            </button>
+                                            
                                             <div className="text-center">
                                                 <small className="text-muted">
                                                     By signing in, you agree to our 
@@ -446,6 +478,38 @@ const LoginRegister = () => {
                                                         Create Account
                                                     </React.Fragment>
                                                 )}
+                                            </button>
+                                            
+                                            <div className="d-flex align-items-center my-3">
+                                                <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
+                                                <span className="px-3 text-muted">or</span>
+                                                <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-lg w-100 fw-semibold mb-2"
+                                                disabled={loading}
+                                                onClick={() => loginWithGoogle && loginWithGoogle()}
+                                                style={{
+                                                    background: '#ffffff',
+                                                    border: '2px solid var(--emerald-200)',
+                                                    color: 'var(--gray-800)',
+                                                    borderRadius: '0.75rem',
+                                                    padding: '0.75rem 1rem',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.transform = 'translateY(-2px)'
+                                                    e.target.style.borderColor = 'var(--emerald-400)'
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.transform = 'translateY(0)'
+                                                    e.target.style.borderColor = 'var(--emerald-200)'
+                                                }}
+                                            >
+                                                <i className="fab fa-google me-2" style={{ color: '#DB4437' }}></i>
+                                                Continue with Google
                                             </button>
                                             
                                             <div className="text-center">

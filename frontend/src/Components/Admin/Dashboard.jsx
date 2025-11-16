@@ -6,6 +6,7 @@ import ProductsManagement from './ProductsManagement';
 import UsersManagement from './UsersManagement';
 import OrdersManagement from './OrdersManagement';
 import ReviewsManagement from './ReviewsManagement';
+import ErrorBoundary from '../Common/ErrorBoundary';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/logo.svg';
 import './Dashboard.css';
@@ -24,17 +25,41 @@ const Dashboard = () => {
     const renderContent = () => {
         switch (activeTab) {
             case 'analytics':
-                return <Analytics />;
+                return (
+                    <ErrorBoundary>
+                        <Analytics />
+                    </ErrorBoundary>
+                );
             case 'products':
-                return <ProductsManagement />;
+                return (
+                    <ErrorBoundary>
+                        <ProductsManagement />
+                    </ErrorBoundary>
+                );
             case 'users':
-                return <UsersManagement />;
+                return (
+                    <ErrorBoundary>
+                        <UsersManagement />
+                    </ErrorBoundary>
+                );
             case 'orders':
-                return <OrdersManagement />;
+                return (
+                    <ErrorBoundary>
+                        <OrdersManagement />
+                    </ErrorBoundary>
+                );
             case 'reviews':
-                return <ReviewsManagement />;
+                return (
+                    <ErrorBoundary>
+                        <ReviewsManagement />
+                    </ErrorBoundary>
+                );
             default:
-                return <Analytics />;
+                return (
+                    <ErrorBoundary>
+                        <Analytics />
+                    </ErrorBoundary>
+                );
         }
     };
 

@@ -36,7 +36,7 @@ const UpdateProfile = () => {
         }
         try {
             setLoading(true);
-            const { data } = await axios.put(`${import.meta.env.VITE_API}/me/update`, userData, config)
+            const { data } = await axios.put('/me/update', userData, config)
             
             if (data.success) {
                 // Update the user data in AuthContext

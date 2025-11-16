@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { auth, firebaseEnvReady } from '../utils/firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 // Map Firebase auth errors to friendlier, actionable messages
 const friendlyAuthError = (error) => {
@@ -178,6 +178,31 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Login/Register with Google
+    const loginWithGoogle = async () => {
+        try {
+            dispatch({ type: 'LOGIN_REQUEST' });
+            if (!firebaseEnvReady || !auth) throw new Error('Firebase not configured');
+
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+
+            const cred = await signInWithPopup(auth, provider);
+            const idToken = await cred.user.getIdToken();
+            axios.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+            const { data } = await axios.get('/me');
+
+            dispatch({ type: 'LOGIN_SUCCESS', payload: data.user });
+            toast.success('Signed in with Google!');
+            return { success: true, user: data.user };
+        } catch (error) {
+            const message = error.response?.data?.message || friendlyAuthError(error);
+            dispatch({ type: 'LOGIN_FAIL', payload: message });
+            toast.error(message);
+            return { success: false, message };
+        }
+    };
+
     // Logout user
     const logout = async () => {
         try {
@@ -211,6 +236,7 @@ export const AuthProvider = ({ children }) => {
         ...state,
         register,
         login,
+        loginWithGoogle,
         logout,
         loadUser,
         clearErrors,

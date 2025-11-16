@@ -46,12 +46,10 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
     }
 
     const getProductDetails = async (id) => {
-        const base = import.meta.env.VITE_API;
-        let link = `${base}/product/${id}`
         try {
             setLoading(true)
             setError('') // Clear any previous errors
-            let res = await axios.get(link)
+            const res = await axios.get(`/product/${id}`)
             setProduct(res.data.product)
             setLoading(false)
         } catch (err) {

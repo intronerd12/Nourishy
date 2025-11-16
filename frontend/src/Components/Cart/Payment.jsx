@@ -36,7 +36,7 @@ const Payment = ({cartItems, shippingInfo}) => {
                     'Authorization': `Bearer ${getToken()}`
                 }
             }
-            const { data } = await axios.post(`${import.meta.env.VITE_API}/order/new`, order, config)
+            const { data } = await axios.post('/order/new', order, config)
             // setIsUpdated(data.success)
             setLoading(false)
             toast.success('order created', {

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/AdminOrders.css';
+import DataTable from 'react-data-table-component';
 
 const statusOptions = ['Pending', 'Confirmed', 'Cancelled', 'Delivered'];
 
@@ -90,6 +91,91 @@ const OrdersManagement = () => {
     );
   }
 
+  // DataTable columns
+  const columns = [
+    {
+      name: 'Order',
+      selector: row => row.id,
+      sortable: false,
+      grow: 1,
+      cell: (row) => (
+        <div>
+          <div className="fw-semibold">#{String(row.id).slice(-8).toUpperCase()}</div>
+          <small className="text-muted">{row.id}</small>
+        </div>
+      ),
+    },
+    {
+      name: 'Customer',
+      selector: row => row.customerName,
+      sortable: false,
+      grow: 1,
+      cell: (row) => (
+        <div>
+          <div>{row.customerName || '—'}</div>
+          <small className="text-muted">{row.customerEmail || ''}</small>
+        </div>
+      ),
+    },
+    {
+      name: 'Date',
+      selector: row => row.createdAt,
+      sortable: true,
+      width: '200px',
+      cell: (row) => new Date(row.createdAt).toLocaleString(),
+    },
+    {
+      name: 'Status',
+      sortable: false,
+      width: '240px',
+      cell: (row) => (
+        <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
+          <select
+            className={`form-select form-select-sm status-select status-${statusClass(row.orderStatus)}`}
+            value={row.orderStatus}
+            onChange={(e) => handleStatusChange(row.id, e.target.value)}
+            disabled={Boolean(updating[row.id])}
+          >
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <span className={`status-chip status-${statusClass(row.orderStatus)}`}>{row.orderStatus}</span>
+          {updating[row.id] && (
+            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          )}
+        </div>
+      ),
+    },
+    {
+      name: 'Total',
+      selector: row => row.totalPrice,
+      sortable: true,
+      right: true,
+      width: '140px',
+      cell: (row) => `₱${formatCurrency(row.totalPrice)}`,
+    },
+    {
+      name: 'Items',
+      selector: row => row.itemsCount,
+      sortable: true,
+      width: '120px',
+      cell: (row) => (
+        <span className="badge items-badge">{row.itemsCount || 0} ITEMS</span>
+      ),
+    },
+  ];
+
+  const rows = (orders || []).map((order) => ({
+    id: order._id,
+    customerName: order.user?.name || '—',
+    customerEmail: order.user?.email || '',
+    createdAt: order.createdAt,
+    orderStatus: order.orderStatus,
+    totalPrice: order.totalPrice,
+    itemsCount: order.orderItems?.length || 0,
+  }));
+
   return (
     <div className="card admin-orders-card">
       <div className="card-header admin-orders-header d-flex justify-content-between align-items-center">
@@ -105,60 +191,19 @@ const OrdersManagement = () => {
           </div>
         )}
 
-        {orders.length === 0 ? (
+        {rows.length === 0 ? (
           <div className="text-center text-muted">No orders found.</div>
         ) : (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle admin-orders-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Customer</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th className="text-end">Total</th>
-                  <th>Items</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map(order => (
-                  <tr key={order._id}>
-                    <td>
-                      <div className="fw-semibold">#{order._id.slice(-8).toUpperCase()}</div>
-                      <small className="text-muted">{order._id}</small>
-                    </td>
-                    <td>
-                      <div>{order.user?.name || '—'}</div>
-                      <small className="text-muted">{order.user?.email || ''}</small>
-                    </td>
-                    <td>{new Date(order.createdAt).toLocaleString()}</td>
-                    <td>
-                      <div className="d-flex align-items-center gap-2">
-                        <select
-                          className={`form-select form-select-sm status-select status-${statusClass(order.orderStatus)}`}
-                          value={order.orderStatus}
-                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                          disabled={updating[order._id]}
-                        >
-                          {statusOptions.map(s => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
-                        </select>
-                        <span className={`status-chip status-${statusClass(order.orderStatus)}`}>{order.orderStatus}</span>
-                        {updating[order._id] && (
-                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="text-end">₱{formatCurrency(order.totalPrice)}</td>
-                    <td>
-                      <span className="badge items-badge">{order.orderItems?.length || 0} ITEMS</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={rows}
+            pagination
+            paginationPerPage={10}
+            paginationRowsPerPageOptions={[5, 10, 20]}
+            highlightOnHover
+            responsive
+            dense
+          />
         )}
       </div>
     </div>

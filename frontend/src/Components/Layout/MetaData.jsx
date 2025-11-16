@@ -1,12 +1,18 @@
-import React from 'react'
-import { Helmet } from 'react-helmet'
+import { useEffect } from 'react'
 
 const MetaData = ({ title }) => {
-    return (
-        <Helmet>
-            <title>{`${title} - Nourishy`}</title>
-        </Helmet>
-    )
+  useEffect(() => {
+    const nextTitle = `${title} - Nourishy`;
+    try {
+      if (typeof document !== 'undefined') {
+        document.title = nextTitle;
+      }
+    } catch (_) {
+      // no-op: safely ignore title set errors in non-DOM environments
+    }
+  }, [title]);
+
+  return null;
 }
 
 export default MetaData

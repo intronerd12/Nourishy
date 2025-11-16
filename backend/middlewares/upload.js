@@ -1,10 +1,16 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 // Disk storage to get file paths for Cloudinary upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '..', 'uploads'));
+    const dest = path.join(__dirname, '..', 'uploads');
+    // Ensure the uploads directory exists to avoid ENOENT errors
+    fs.mkdir(dest, { recursive: true }, (err) => {
+      if (err) return cb(err);
+      cb(null, dest);
+    });
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);

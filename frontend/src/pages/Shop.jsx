@@ -19,6 +19,8 @@ const Shop = ({ addItemToCart, cartItems }) => {
     const [priceRange, setPriceRange] = useState([0, 5000])
     const [searchQuery, setSearchQuery] = useState('')
     const [showFilters, setShowFilters] = useState(false)
+    const [minRating, setMinRating] = useState(0)
+    const [onlyReviewed, setOnlyReviewed] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
     const [productsPerPage] = useState(12)
     const [searchParams, setSearchParams] = useSearchParams()
@@ -40,7 +42,7 @@ const Shop = ({ addItemToCart, cartItems }) => {
     const fetchProducts = async () => {
         try {
             setLoading(true)
-            const { data } = await axios.get(`${import.meta.env.VITE_API}/products`)
+            const { data } = await axios.get('/products')
             setProducts(data.products || [])
             setFilteredProducts(data.products || [])
             setLoading(false)
@@ -73,22 +75,38 @@ const Shop = ({ addItemToCart, cartItems }) => {
             product.price >= priceRange[0] && product.price <= priceRange[1]
         )
 
+        // Filter by minimum rating
+        if (minRating > 0) {
+            filtered = filtered.filter(product => (product.ratings || 0) >= minRating)
+        }
+
+        // Filter to only products with at least one review
+        if (onlyReviewed) {
+            filtered = filtered.filter(product => (product.numOfReviews || 0) > 0)
+        }
+
         // Sort products
         switch (sortBy) {
             case 'price-low':
-                filtered.sort((a, b) => a.price - b.price)
+                filtered.sort((a, b) => (a.price || 0) - (b.price || 0))
                 break
             case 'price-high':
-                filtered.sort((a, b) => b.price - a.price)
+                filtered.sort((a, b) => (b.price || 0) - (a.price || 0))
                 break
             case 'rating':
                 filtered.sort((a, b) => (b.ratings || 0) - (a.ratings || 0))
                 break
             case 'name':
-                filtered.sort((a, b) => a.name.localeCompare(b.name))
+                filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                break
+            case 'newest':
+                filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                break
+            case 'featured':
+                filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0))
                 break
             default:
-                // Featured/default order
+                // leave API/default order
                 break
         }
 
@@ -160,7 +178,7 @@ const Shop = ({ addItemToCart, cartItems }) => {
 
     useEffect(() => {
         filterAndSortProducts()
-    }, [products, selectedCategory, sortBy, priceRange, searchQuery])
+    }, [products, selectedCategory, sortBy, priceRange, searchQuery, minRating, onlyReviewed])
 
     // Update URL params when filters change
     useEffect(() => {
@@ -168,8 +186,10 @@ const Shop = ({ addItemToCart, cartItems }) => {
         if (selectedCategory !== 'All') params.set('category', selectedCategory)
         if (sortBy !== 'featured') params.set('sort', sortBy)
         if (searchQuery) params.set('search', searchQuery)
+        if (minRating > 0) params.set('minRating', String(minRating))
+        if (onlyReviewed) params.set('reviewed', 'true')
         setSearchParams(params)
-    }, [selectedCategory, sortBy, searchQuery, setSearchParams])
+    }, [selectedCategory, sortBy, searchQuery, minRating, onlyReviewed, setSearchParams])
 
     if (loading) {
         return <Loader />
@@ -282,6 +302,33 @@ const Shop = ({ addItemToCart, cartItems }) => {
                                     </div>
                                 </div>
 
+                                {/* Reviews */}
+                                <div className="mb-4">
+                                    <h6 className="fw-semibold mb-3">Reviews</h6>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label className="small">Minimum rating</Form.Label>
+                                        <Form.Select
+                                            value={minRating}
+                                            onChange={(e) => setMinRating(Number(e.target.value))}
+                                            size="sm"
+                                        >
+                                            <option value="0">All ratings</option>
+                                            <option value="4">4+ stars</option>
+                                            <option value="3">3+ stars</option>
+                                            <option value="2">2+ stars</option>
+                                            <option value="1">1+ star</option>
+                                        </Form.Select>
+                                    </Form.Group>
+
+                                    <Form.Check
+                                        type="checkbox"
+                                        id="onlyReviewed"
+                                        label="Only show reviewed products"
+                                        checked={onlyReviewed}
+                                        onChange={(e) => setOnlyReviewed(e.target.checked)}
+                                    />
+                                </div>
+
                                 {/* Clear Filters */}
                                 <Button
                                     variant="outline-primary"
@@ -292,6 +339,8 @@ const Shop = ({ addItemToCart, cartItems }) => {
                                         setSortBy('featured')
                                         setPriceRange([0, 5000])
                                         setSearchQuery('')
+                                        setMinRating(0)
+                                        setOnlyReviewed(false)
                                     }}
                                 >
                                     Clear All Filters

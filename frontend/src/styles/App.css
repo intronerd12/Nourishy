@@ -108,7 +108,7 @@ nav {
 
 .ratings {
   font-size: 1.2rem;
-  color: #fdcc0d;
+  color: var(--yellow);
 }
 
 #no_of_reviews {
@@ -132,7 +132,7 @@ footer {
   display: inline-block;
   position: relative;
   font-family: FontAwesome;
-  color: #fdcc0d;
+  color: var(--yellow);
 }
 
 .rating-outer::before {
@@ -150,7 +150,7 @@ footer {
 
 .rating-inner::before {
   content: '\f005 \f005 \f005 \f005 \f005';
-  color: #f8ce0b;
+  color: var(--yellow);
 }
 
 /* Product Details Page */
@@ -184,11 +184,11 @@ footer {
 }
 
 .redColor {
-  color: red;
+  color: var(--danger);
 }
 
 .greenColor {
-  color: green;
+  color: var(--primary);
 }
 
 #product_image {
@@ -312,8 +312,8 @@ footer {
 }
 
 .wrapper form .btn {
-  background-color: #fa9c23;
-  border-color: #fa9c23;
+  background-color: var(--accent);
+  border-color: var(--accent);
   color: white;
   margin-top: 2.5rem;
 }
@@ -392,7 +392,7 @@ footer {
 }
 
 .active-step {
-  background: #fa9c23;
+  background: var(--accent);
   color: #fff;
 }
 
@@ -400,7 +400,7 @@ footer {
   float: left;
   width: 0;
   border-top: 20px solid transparent;
-  border-left: 15px solid #fa9c23;
+  border-left: 15px solid var(--accent);
   border-bottom: 20px solid transparent;
   margin-left: -1px;
 }
@@ -408,9 +408,9 @@ footer {
 .triangle2-active {
   width: 0;
   float: left;
-  border-top: 20px solid #fa9c23;
+  border-top: 20px solid var(--accent);
   border-left: 15px solid #fff;
-  border-bottom: 20px solid #fa9c23;
+  border-bottom: 20px solid var(--accent);
   margin-right: -1px;
 }
 
@@ -450,8 +450,8 @@ footer {
 }
 
 #edit_profile {
-  background-color: #fa9c23;
-  border-color: #fa9c23;
+  background-color: var(--accent);
+  border-color: var(--accent);
 }
 
 /* Confirm Order */
@@ -462,8 +462,8 @@ footer {
 }
 
 .update-btn {
-  background-color: #fa9c23;
-  border-color: #fa9c23;
+  background-color: var(--accent);
+  border-color: var(--accent);
   color: white;
 }
 
@@ -608,11 +608,11 @@ ul.CTAs a {
 }
 
 .orange {
-  color: #fa9c23;
+  color: var(--accent);
 }
 
 .yellow {
-  color: #fdcc0d;
+  color: var(--yellow);
 }
 
 .review_user {

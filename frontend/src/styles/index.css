@@ -1,20 +1,28 @@
-/* Theme variables (moved from index.html) */
+/* Theme variables (Nourishy brand palette) */
 :root {
-  --emerald-50: #ecfdf5;
-  --emerald-100: #d1fae5;
-  --emerald-200: #a7f3d0;
-  --emerald-300: #6ee7b7;
-  --emerald-400: #34d399;
-  --emerald-500: #10b981;
-  --emerald-600: #059669;
-  --emerald-700: #047857;
-  --emerald-800: #065f46;
-  --emerald-900: #064e3b;
+  /* Brand palette */
+  --brand-olive: #84994F;   /* Primary */
+  --brand-yellow: #FFE797;  /* Soft yellow */
+  --brand-orange: #FCB53B;  /* Accent orange */
+  --brand-red: #B45253;     /* Alert red */
 
-  --primary: var(--emerald-600);
-  --primary-dark: var(--emerald-700);
-  --primary-light: var(--emerald-500);
-  --primary-bg: var(--emerald-50);
+  /* Core theme tokens */
+  --primary: var(--brand-olive);
+  --primary-dark: var(--brand-olive);
+  --primary-light: var(--brand-olive);
+  --primary-bg: var(--brand-yellow);
+
+  /* Extended tokens */
+  --accent: var(--brand-orange);
+  --accent-dark: var(--brand-orange);
+  --yellow: var(--brand-yellow);
+  --danger: var(--brand-red);
+  --surface-dark: #232f3e; /* Admin sidebar neutral */
+
+  /* RGB tokens for shadows and focus rings */
+  --primary-rgb: 132, 153, 79;
+  --accent-rgb: 252, 181, 59;
+  --danger-rgb: 180, 82, 83;
 }
 
 /* Utility classes matching Bootstrap naming */
@@ -22,6 +30,11 @@
 .bg-primary-light { background-color: var(--primary-light) !important; }
 .bg-primary-dark { background-color: var(--primary-dark) !important; }
 .bg-primary-bg { background-color: var(--primary-bg) !important; }
+
+/* Accent utilities */
+.bg-accent { background-color: var(--accent) !important; }
+.text-accent { color: var(--accent) !important; }
+.border-accent { border-color: var(--accent) !important; }
 
 .text-primary { color: var(--primary) !important; }
 .text-primary-dark { color: var(--primary-dark) !important; }
@@ -31,6 +44,10 @@
 .btn-primary:hover { background-color: var(--primary-dark); border-color: var(--primary-dark); }
 .btn-outline-primary { color: var(--primary); border-color: var(--primary); }
 .btn-outline-primary:hover { background-color: var(--primary); border-color: var(--primary); }
+
+/* Accent buttons */
+.btn-accent { background-color: var(--accent); border-color: var(--accent); }
+.btn-accent:hover { background-color: var(--accent-dark); border-color: var(--accent-dark); }
 
 /* Global base styles */
 body {
@@ -46,7 +63,7 @@ body {
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
 ::-webkit-scrollbar-thumb { background: var(--primary-dark); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #065f46; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
 
 /* Professional Animations */
 @keyframes fadeInUp {
@@ -196,7 +213,7 @@ img:hover {
 /* Enhanced focus states */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
   border-color: var(--primary);
 }
 
@@ -229,7 +246,7 @@ input:focus, textarea:focus, select:focus {
 /* Shop Header Styling */
 .shop-header {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
-  border-bottom: 1px solid rgba(5, 150, 105, 0.1);
+  border-bottom: 1px solid rgba(var(--primary-rgb), 0.1);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -242,7 +259,7 @@ input:focus, textarea:focus, select:focus {
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(5, 150, 105, 0.1);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
 }
 
 .filter-sidebar:hover {
@@ -273,7 +290,7 @@ input:focus, textarea:focus, select:focus {
   border-radius: 16px;
   overflow: hidden;
   background: white;
-  border: 1px solid rgba(5, 150, 105, 0.1);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -366,13 +383,13 @@ input:focus, textarea:focus, select:focus {
 }
 
 .filter-item:hover {
-  background-color: rgba(5, 150, 105, 0.05);
+  background-color: rgba(var(--primary-rgb), 0.05);
   transform: translateX(4px);
-  border-color: rgba(5, 150, 105, 0.2);
+  border-color: rgba(var(--primary-rgb), 0.2);
 }
 
 .filter-item.active {
-  background-color: rgba(5, 150, 105, 0.1);
+  background-color: rgba(var(--primary-rgb), 0.1);
   border-left: 3px solid var(--primary);
   color: var(--primary);
   font-weight: 600;
@@ -397,7 +414,7 @@ input:focus, textarea:focus, select:focus {
 
 .active-filter-badge:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 /* Enhanced Loading States */
@@ -446,7 +463,7 @@ input:focus, textarea:focus, select:focus {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--primary);
 }
 
 /* View Mode Toggle */
@@ -761,7 +778,7 @@ input:focus, textarea:focus, select:focus {
 .wishlist-btn:focus {
   outline: 3px solid var(--primary) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3) !important;
 }
 
 /* High contrast mode support */
@@ -844,14 +861,14 @@ input:focus, textarea:focus, select:focus {
 
 /* Error state accessibility */
 .error-message {
-  color: #dc2626;
+  color: var(--danger);
   font-weight: 600;
   role: alert;
 }
 
 /* Success state accessibility */
 .success-message {
-  color: #059669;
+  color: var(--primary);
   font-weight: 600;
   role: status;
 }

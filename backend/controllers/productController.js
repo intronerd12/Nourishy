@@ -24,10 +24,18 @@ exports.newProduct = async (req, res) => {
         const files = req.files || [];
         let images = [];
         if (files.length > 0) {
-            images = await uploadImagesToCloudinary(files);
+            try {
+                images = await uploadImagesToCloudinary(files);
+            } catch (e) {
+                // If Cloudinary is not configured or upload fails, proceed without images
+                try { files.forEach(f => f?.path && fs.existsSync(f.path) && fs.unlinkSync(f.path)); } catch (_) {}
+                console.error('Image upload failed, proceeding without images:', e?.message || e);
+                images = [];
+            }
         }
 
-        const payload = { ...req.body };
+        // Ensure required ownership field is set from authenticated user
+        const payload = { ...req.body, user: req.user?._id };
         if (images.length > 0) payload.images = images;
 
         const product = await Product.create(payload);
@@ -94,9 +102,44 @@ exports.updateProduct = async (req, res) => {
 
         const files = req.files || [];
         let images = product.images || [];
+        const clearAll = String(req.body.clearAllImages || '').toLowerCase() === 'true';
+        // Parse lists of specific image identifiers to remove (public_ids and/or urls)
+        let removeIds = [];
+        if (req.body.removeImagePublicIds) {
+            try {
+                removeIds = JSON.parse(req.body.removeImagePublicIds);
+            } catch (_) {
+                removeIds = String(req.body.removeImagePublicIds).split(',').map(s => s.trim()).filter(Boolean);
+            }
+        }
+        let removeUrls = [];
+        if (req.body.removeImageUrls) {
+            try {
+                removeUrls = JSON.parse(req.body.removeImageUrls);
+            } catch (_) {
+                removeUrls = String(req.body.removeImageUrls).split(',').map(s => s.trim()).filter(Boolean);
+            }
+        }
+
+        if (clearAll) {
+            images = [];
+        } else if (removeIds.length > 0 || removeUrls.length > 0) {
+            // Attempt to destroy on Cloudinary for public_ids, ignore failures
+            for (const pid of removeIds) {
+                try { await cloudinary.uploader.destroy(pid); } catch (_) {}
+            }
+            images = (images || []).filter(img => !removeIds.includes(img.public_id) && !removeUrls.includes(img.url));
+        }
+
         if (files.length > 0) {
-            const uploaded = await uploadImagesToCloudinary(files);
-            images = uploaded.length > 0 ? uploaded : images;
+            try {
+                const uploaded = await uploadImagesToCloudinary(files);
+                images = uploaded.length > 0 ? [...images, ...uploaded] : images;
+            } catch (e) {
+                // Cleanup temp files and keep existing images on failure
+                try { files.forEach(f => f?.path && fs.existsSync(f.path) && fs.unlinkSync(f.path)); } catch (_) {}
+                console.error('Image upload failed, keeping existing images:', e?.message || e);
+            }
         }
 
         const payload = { ...req.body, images };
