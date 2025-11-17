@@ -211,21 +211,7 @@ const Shop = ({ addItemToCart, cartItems }) => {
         <>
             <MetaData title={'Shop - Nourishy Hair Products'} />
             
-            {/* Breadcrumb */}
-            <div className="bg-light border-bottom">
-                <Container className="py-3">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb mb-0">
-                            <li className="breadcrumb-item">
-                                <Link to="/" className="text-decoration-none">
-                                    <i className="fa fa-home me-1"></i>Home
-                                </Link>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">Shop</li>
-                        </ol>
-                    </nav>
-                </Container>
-            </div>
+            {/* Breadcrumb removed: Home moved to header nav alongside Shop */}
 
             {/* Hero Section */}
             <section className="bg-primary-bg py-5">

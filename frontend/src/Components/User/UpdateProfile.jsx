@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../contexts/AuthContext';
+import { auth } from '../../utils/firebase';
 import Loader from '../Layout/Loader';
 import * as Yup from 'yup'
 
@@ -27,33 +28,43 @@ const UpdateProfile = () => {
     })
 
     const updateProfile = async (userData) => {
-        const token = localStorage.getItem('token');
-        const config = {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'Authorization': `Bearer ${token}`
-            }
-        }
         try {
             setLoading(true);
-            const { data } = await axios.put('/me/update', userData, config)
-            
+
+            // Prefer Firebase ID token for backend auth
+            let idToken = null;
+            try {
+                idToken = await auth?.currentUser?.getIdToken(true);
+            } catch (_) {}
+
+            if (!idToken) {
+                setLoading(false);
+                toast.error('Session expired. Please login again to update your profile.', { position: 'bottom-right' });
+                navigate('/login');
+                return;
+            }
+
+            const config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${idToken}`
+                }
+            };
+
+            const { data } = await axios.put('/me/update', userData, config);
+
             if (data.success) {
-                // Update the user data in AuthContext
                 updateUser(data.user);
                 setIsUpdated(data.success);
-                toast.success(data.message || 'Profile updated successfully!', {
-                    position: 'bottom-right'
-                });
+                toast.success(data.message || 'Profile updated successfully!', { position: 'bottom-right' });
                 navigate('/me', { replace: true });
             }
             setLoading(false);
         } catch (error) {
             setLoading(false);
-            console.log(error)
-            toast.error(error.response?.data?.message || 'Failed to update profile', {
-                position: 'bottom-right'
-            });
+            console.log(error);
+            const msg = error.response?.data?.message || 'Failed to update profile';
+            toast.error(msg, { position: 'bottom-right' });
         }
     }
 

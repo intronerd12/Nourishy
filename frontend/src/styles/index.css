@@ -1,4 +1,5 @@
 /* Theme variables (Nourishy brand palette) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
 :root {
   /* Brand palette */
   --brand-olive: #84994F;   /* Primary */
@@ -52,7 +53,7 @@
 /* Global base styles */
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
   color: #334155;
   background-color: #f8fafc;
   -webkit-font-smoothing: antialiased;
@@ -884,3 +885,64 @@ input:focus, textarea:focus, select:focus {
   color: #1f2937; /* deep charcoal, not green */
   line-height: 1;
 }
+/* ===== User Account Dropdown (Header) ===== */
+.user-menu-toggle {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 18px rgba(var(--primary-rgb), 0.25);
+}
+.user-menu-toggle:hover, .user-menu-toggle:focus {
+  background: var(--primary-dark);
+  color: #ffffff;
+}
+.user-menu .user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.user-menu .user-avatar.small {
+  width: 24px;
+  height: 24px;
+  font-size: 0.8rem;
+}
+.user-menu .user-label { font-weight: 600; }
+.user-menu-dropdown {
+  min-width: 260px;
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--primary-rgb), 0.15);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+}
+.user-menu-header {
+  padding: 10px 12px;
+  margin: 4px 6px 8px;
+  border-bottom: 1px solid rgba(var(--primary-rgb), 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-menu-header .name { font-weight: 700; }
+.user-menu-dropdown .dropdown-item {
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-menu-dropdown .dropdown-item .menu-icon { color: var(--primary); }
+.user-menu-dropdown .dropdown-item:hover { background-color: rgba(var(--primary-rgb), 0.08); }
+.user-menu-divider { margin: 8px 10px; border-color: rgba(var(--primary-rgb), 0.15); }

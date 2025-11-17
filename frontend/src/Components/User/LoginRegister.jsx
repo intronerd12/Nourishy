@@ -140,43 +140,54 @@ const LoginRegister = () => {
             
             {loading && <Loader />}
             
-            <div className="min-h-screen py-5" style={{
-                background: 'linear-gradient(135deg, var(--emerald-50) 0%, var(--emerald-100) 50%, var(--emerald-50) 100%)'
+            <div className="py-5" style={{
+                position: 'relative',
+                minHeight: 'calc(100vh - 200px)',
+                paddingBottom: '8rem',
+                background: 'linear-gradient(135deg, var(--primary-bg) 0%, rgba(var(--primary-rgb), 0.08) 50%, var(--primary-bg) 100%)'
             }}>
                 {/* Decorative background elements */}
                 <div className="position-absolute top-0 end-0 w-25 h-25 rounded-circle" style={{
-                    background: 'var(--emerald-200)',
+                    background: 'rgba(var(--primary-rgb), 0.15)',
                     filter: 'blur(100px)',
                     opacity: '0.3'
                 }}></div>
                 <div className="position-absolute bottom-0 start-0 w-25 h-25 rounded-circle" style={{
-                    background: 'var(--emerald-300)',
+                    background: 'rgba(var(--primary-rgb), 0.22)',
                     filter: 'blur(80px)',
                     opacity: '0.2'
                 }}></div>
                 
-                <div className="container position-relative">
+                {/* Page heading moved above the auth container to free space */}
+                <div className="container">
                     <div className="row justify-content-center">
-                        <div className="col-12 col-md-8 col-lg-6">
-                            {/* Brand header */}
+                        <div className="col-12 col-md-10 col-lg-8">
                             <div className="text-center mb-4">
-                                <h1 className="fw-bold mb-2" style={{color: 'var(--emerald-700)'}}>
+                                <h1 className="fw-bold mb-2" style={{color: 'var(--primary-dark)'}}>
                                     <i className="fas fa-leaf me-2"></i>
                                     Nourishy
                                 </h1>
                                 <p className="text-muted">Welcome back to your natural beauty journey</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="container position-relative">
+                    <div className="row justify-content-center">
+                        <div className="col-12 col-md-8 col-lg-6">
+                            {/* Brand header removed from inside the container */}
                             
                             <div className="card border-0" style={{
                                 borderRadius: '1.5rem',
-                                boxShadow: '0 20px 40px rgba(16, 185, 129, 0.1)',
+                                boxShadow: '0 20px 40px rgba(var(--primary-rgb), 0.1)',
                                 backdropFilter: 'blur(10px)',
                                 background: 'rgba(255, 255, 255, 0.95)'
                             }}>
                                 <div className="card-header bg-transparent border-0 p-0">
                                     <div className="d-flex" style={{
                                         borderRadius: '1.5rem 1.5rem 0 0',
-                                        background: 'linear-gradient(135deg, var(--emerald-100), var(--emerald-50))'
+                                        background: 'linear-gradient(135deg, var(--primary-bg), rgba(var(--primary-rgb), 0.08))'
                                     }}>
                                         <button 
                                             className={`nav-link flex-fill text-center py-3 border-0 fw-semibold transition-all ${
@@ -191,7 +202,7 @@ const LoginRegister = () => {
                                             }}
                                             style={{
                                                 borderRadius: '1.5rem 0 0 0',
-                                                color: activeTab === 'login' ? 'var(--emerald-700)' : 'var(--gray-600)',
+                                                color: activeTab === 'login' ? 'var(--primary-dark)' : 'var(--gray-600)',
                                                 transition: 'all 0.3s ease'
                                             }}
                                         >
@@ -211,7 +222,7 @@ const LoginRegister = () => {
                                             }}
                                             style={{
                                                 borderRadius: '0 1.5rem 0 0',
-                                                color: activeTab === 'register' ? 'var(--emerald-700)' : 'var(--gray-600)',
+                                                color: activeTab === 'register' ? 'var(--primary-dark)' : 'var(--gray-600)',
                                                 transition: 'all 0.3s ease'
                                             }}
                                         >
@@ -256,7 +267,7 @@ const LoginRegister = () => {
                                             </div>
 
                                             <div className="mb-4">
-                                                <label htmlFor="login_password" className="form-label fw-semibold mb-2" style={{color: 'var(--emerald-700)'}}>
+                                                <label htmlFor="login_password" className="form-label fw-semibold mb-2" style={{color: 'var(--primary-dark)'}}>
                                                     <i className="fas fa-lock me-2"></i>Password
                                                 </label>
                                                 <input
@@ -270,12 +281,12 @@ const LoginRegister = () => {
                                                     placeholder="Enter your password"
                                                     style={{
                                                         borderRadius: '0.75rem',
-                                                        border: '2px solid var(--emerald-200)',
+                                                        border: '2px solid rgba(var(--primary-rgb), 0.2)',
                                                         padding: '0.75rem 1rem',
                                                         transition: 'all 0.3s ease'
                                                     }}
-                                                    onFocus={(e) => e.target.style.borderColor = 'var(--emerald-500)'}
-                                                    onBlur={(e) => e.target.style.borderColor = 'var(--emerald-200)'}
+                                                    onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+                                                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--primary-rgb), 0.2)'}
                                                 />
                                                 {loginErrors.password && <small className="text-danger">{loginErrors.password}</small>}
                                             </div>
@@ -329,7 +340,7 @@ const LoginRegister = () => {
                                             </button>
                                             
                                             <div className="d-flex align-items-center my-3">
-                                                <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
+                                                <div className="flex-grow-1" style={{ height: 1, background: 'rgba(var(--primary-rgb), 0.2)' }}></div>
                                                 <span className="px-3 text-muted">or</span>
                                                 <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
                                             </div>
@@ -465,15 +476,15 @@ const LoginRegister = () => {
                                                     borderRadius: '0.75rem',
                                                     padding: '0.75rem 1rem',
                                                     transition: 'all 0.3s ease',
-                                                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                                                    boxShadow: '0 4px 15px rgba(var(--primary-rgb), 0.3)'
                                                 }}
                                                 onMouseEnter={(e) => {
                                                     e.target.style.transform = 'translateY(-2px)'
-                                                    e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)'
+                                                    e.target.style.boxShadow = '0 6px 20px rgba(var(--primary-rgb), 0.4)'
                                                 }}
                                                 onMouseLeave={(e) => {
                                                     e.target.style.transform = 'translateY(0)'
-                                                    e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)'
+                                                    e.target.style.boxShadow = '0 4px 15px rgba(var(--primary-rgb), 0.3)'
                                                 }}
                                             >
                                                 {loading ? (
@@ -490,7 +501,7 @@ const LoginRegister = () => {
                                             </button>
                                             
                                             <div className="d-flex align-items-center my-3">
-                                                <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
+                                                <div className="flex-grow-1" style={{ height: 1, background: 'rgba(var(--primary-rgb), 0.2)' }}></div>
                                                 <span className="px-3 text-muted">or</span>
                                                 <div className="flex-grow-1" style={{ height: 1, background: 'var(--emerald-200)' }}></div>
                                             </div>
@@ -502,7 +513,7 @@ const LoginRegister = () => {
                                                 onClick={() => loginWithGoogle && loginWithGoogle()}
                                                 style={{
                                                     background: '#ffffff',
-                                                    border: '2px solid var(--emerald-200)',
+                                                    border: '2px solid rgba(var(--primary-rgb), 0.2)',
                                                     color: 'var(--gray-800)',
                                                     borderRadius: '0.75rem',
                                                     padding: '0.75rem 1rem',
@@ -510,11 +521,11 @@ const LoginRegister = () => {
                                                 }}
                                                 onMouseEnter={(e) => {
                                                     e.target.style.transform = 'translateY(-2px)'
-                                                    e.target.style.borderColor = 'var(--emerald-400)'
+                                                    e.target.style.borderColor = 'rgba(var(--primary-rgb), 0.35)'
                                                 }}
                                                 onMouseLeave={(e) => {
                                                     e.target.style.transform = 'translateY(0)'
-                                                    e.target.style.borderColor = 'var(--emerald-200)'
+                                                    e.target.style.borderColor = 'rgba(var(--primary-rgb), 0.2)'
                                                 }}
                                             >
                                                 <i className="fab fa-google me-2" style={{ color: '#DB4437' }}></i>
@@ -524,10 +535,10 @@ const LoginRegister = () => {
                                             <div className="text-center">
                                                 <small className="text-muted">
                                                     By creating an account, you agree to our 
-                                                    <a href="#" className="text-decoration-none ms-1" style={{color: 'var(--emerald-600)'}}>
+                                                    <a href="#" className="text-decoration-none ms-1" style={{color: 'var(--accent)'}}>
                                                         Terms & Conditions
                                                     </a> and 
-                                                    <a href="#" className="text-decoration-none ms-1" style={{color: 'var(--emerald-600)'}}>
+                                                    <a href="#" className="text-decoration-none ms-1" style={{color: 'var(--accent)'}}>
                                                         Privacy Policy
                                                     </a>
                                                 </small>

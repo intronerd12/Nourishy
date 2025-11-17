@@ -19,7 +19,7 @@ const Header = ({cartItems}) => {
 
     const logoutHandler = async () => {
         await logout();
-        navigate('/');
+        navigate('/loginregister');
     }
 
 
@@ -41,13 +41,13 @@ const Header = ({cartItems}) => {
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                             <li className="nav-item">
-                                <Link className="nav-link" to="/">Home</Link>
-                            </li>
-                            <li className="nav-item">
                                 {/* UI Showcase removed per Unit 2 requirement */}
                             </li>
                             {!isOnAuthPage && isAuthenticated && (
                                 <>
+                                    <li className="nav-item">
+                                        <Link className="nav-link" to="/">Home</Link>
+                                    </li>
                                     <li className="nav-item">
                                         <Link className="nav-link" to="/shop">Shop</Link>
                                     </li>
@@ -73,19 +73,49 @@ const Header = ({cartItems}) => {
                         {!isOnAuthPage && (
                             <div className="d-flex align-items-center gap-2">
                                 {isAuthenticated && user ? (
-                                    <div className="dropdown">
-                                        <button className="btn btn-outline-light dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span className="me-2">{user?.name || 'User'}</span>
+                                    <div className="dropdown user-menu">
+                                        <button className="btn user-menu-toggle dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span className="user-avatar">
+                                                {(user?.name || 'U').charAt(0).toUpperCase()}
+                                            </span>
+                                            <span className="user-label">{user?.name || 'User'}</span>
                                         </button>
-                                        <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                                        <ul className="dropdown-menu dropdown-menu-end user-menu-dropdown" aria-labelledby="userMenu">
+                                            <li className="user-menu-header">
+                                                <span className="user-avatar small">
+                                                    {(user?.name || 'U').charAt(0).toUpperCase()}
+                                                </span>
+                                                <div className="d-flex flex-column">
+                                                    <strong className="name">{user?.name || 'User'}</strong>
+                                                    <small className="text-muted">{user?.email}</small>
+                                                </div>
+                                            </li>
                                             {user?.role === 'admin' && (
-                                                <li><Link className="dropdown-item" to="/admin/dashboard">Admin Dashboard</Link></li>
+                                                <li>
+                                                    <Link className="dropdown-item" to="/admin/dashboard">
+                                                        <i className="fas fa-chart-bar me-2 menu-icon"></i>
+                                                        Admin Dashboard
+                                                    </Link>
+                                                </li>
                                             )}
-                                            <li><Link className="dropdown-item" to="/orders">Orders</Link></li>
-                                            <li><Link className="dropdown-item" to="/me">Profile</Link></li>
-                                            <li><hr className="dropdown-divider" /></li>
                                             <li>
-                                                <button className="dropdown-item text-danger" onClick={logoutHandler}>Logout</button>
+                                                <Link className="dropdown-item" to="/orders">
+                                                    <i className="fas fa-shopping-bag me-2 menu-icon"></i>
+                                                    Orders
+                                                </Link>
+                                            </li>
+                                            <li>
+                                                <Link className="dropdown-item" to="/me">
+                                                    <i className="fas fa-user-circle me-2 menu-icon"></i>
+                                                    Profile
+                                                </Link>
+                                            </li>
+                                            <li><hr className="dropdown-divider user-menu-divider" /></li>
+                                            <li>
+                                                <button className="dropdown-item text-danger" onClick={logoutHandler}>
+                                                    <i className="fas fa-sign-out-alt me-2 menu-icon"></i>
+                                                    Logout
+                                                </button>
                                             </li>
                                         </ul>
                                     </div>

@@ -19,7 +19,7 @@ const Dashboard = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/');
+        navigate('/loginregister');
     };
 
     const renderContent = () => {

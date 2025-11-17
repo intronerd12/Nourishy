@@ -164,15 +164,15 @@ const Profile = () => {
                                                     {/* Edit Profile Button */}
                                                     <Link 
                                                         to="/me/update" 
-                                                        className="btn btn-lg w-100 fw-semibold" 
+                                                        className="btn btn-primary btn-lg w-100 fw-semibold" 
                                                         style={{
-                                                            background: 'linear-gradient(135deg, var(--emerald-600), var(--emerald-500))',
+                                                            background: 'var(--primary)',
                                                             border: 'none',
                                                             borderRadius: '12px',
                                                             color: 'white',
                                                             padding: '12px 24px',
                                                             transition: 'all 0.3s ease',
-                                                            boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                                                            boxShadow: '0 4px 15px rgba(var(--primary-rgb), 0.3)'
                                                         }}
                                                     >
                                                         <i className="fa fa-edit me-2"></i>
@@ -207,8 +207,8 @@ const Profile = () => {
                                                         {/* Full Name */}
                                                         <div className="col-12 col-sm-6">
                                                             <div className="p-3 rounded-3" style={{
-                                                                background: 'rgba(16, 185, 129, 0.05)',
-                                                                border: '1px solid rgba(16, 185, 129, 0.1)'
+                                                                background: 'rgba(var(--primary-rgb), 0.05)',
+                                                                border: '1px solid rgba(var(--primary-rgb), 0.12)'
                                                             }}>
                                                                 <div className="d-flex align-items-center mb-2">
                                                                     <i className="fa fa-user-circle text-primary me-2"></i>
@@ -221,8 +221,8 @@ const Profile = () => {
                                                         {/* Email Address */}
                                                         <div className="col-12 col-sm-6">
                                                             <div className="p-3 rounded-3" style={{
-                                                                background: 'rgba(16, 185, 129, 0.05)',
-                                                                border: '1px solid rgba(16, 185, 129, 0.1)'
+                                                                background: 'rgba(var(--primary-rgb), 0.05)',
+                                                                border: '1px solid rgba(var(--primary-rgb), 0.12)'
                                                             }}>
                                                                 <div className="d-flex align-items-center mb-2">
                                                                     <i className="fa fa-envelope text-primary me-2"></i>
@@ -337,7 +337,7 @@ const Profile = () => {
                                                     <div className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{
                                                         width: '60px',
                                                         height: '60px',
-                                                        background: 'linear-gradient(135deg, var(--emerald-500), var(--emerald-600))'
+                                                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))'
                                                     }}>
                                                         <i className="fa fa-calendar text-white"></i>
                                                     </div>
@@ -359,7 +359,7 @@ const Profile = () => {
                                                     <div className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{
                                                         width: '60px',
                                                         height: '60px',
-                                                        background: 'linear-gradient(135deg, var(--emerald-500), var(--emerald-600))'
+                                                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))'
                                                     }}>
                                                         <i className="fa fa-check-circle text-white"></i>
                                                     </div>
@@ -381,7 +381,7 @@ const Profile = () => {
                                                     <div className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{
                                                         width: '60px',
                                                         height: '60px',
-                                                        background: 'linear-gradient(135deg, var(--emerald-500), var(--emerald-600))'
+                                                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))'
                                                     }}>
                                                         <i className="fa fa-star text-white"></i>
                                                     </div>
@@ -401,7 +401,7 @@ const Profile = () => {
                                                     <div className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style={{
                                                         width: '60px',
                                                         height: '60px',
-                                                        background: 'linear-gradient(135deg, var(--emerald-500), var(--emerald-600))'
+                                                        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))'
                                                     }}>
                                                         <i className="fa fa-shield-alt text-white"></i>
                                                     </div>

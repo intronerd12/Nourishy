@@ -9,13 +9,14 @@ const {
     updateProfile,
     createAdmin,
     verifyEmail,
-    resendEmailVerification
+    resendEmailVerification,
+    googleLogin
 } = require('../controllers/authController');
 
 const { isAuthenticatedUser } = require('../middlewares/auth');
 const { authorizeRoles } = require('../middlewares/auth');
 const { upload } = require('../middlewares/upload');
-const { getAllUsers, updateUserRole, deleteUser } = require('../controllers/authController');
+const { getAllUsers, updateUserRole, deleteUser, updateUserStatus } = require('../controllers/authController');
 
 router.route('/register').post(registerUser);
 router.route('/login').post(loginUser);
@@ -36,4 +37,9 @@ router.route('/admin/user/:id')
     .put(isAuthenticatedUser, authorizeRoles('admin'), updateUserRole)
     .delete(isAuthenticatedUser, authorizeRoles('admin'), deleteUser);
 
+router.route('/admin/user/:id/status')
+    .put(isAuthenticatedUser, authorizeRoles('admin'), updateUserStatus);
+
 module.exports = router;
+// Google auth route
+router.post('/auth/google', googleLogin);

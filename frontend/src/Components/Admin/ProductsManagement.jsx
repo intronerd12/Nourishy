@@ -51,7 +51,8 @@ const ProductsManagement = () => {
         description: '',
         category: '',
         stock: '',
-        brand: ''
+        brand: '',
+        featured: false
     });
     const [formErrors, setFormErrors] = useState({});
     const { isAuthenticated, user, loading: authLoading } = useAuth();
@@ -65,6 +66,7 @@ const ProductsManagement = () => {
         category: Yup.string().required(),
         stock: Yup.number().integer().min(0).required(),
         brand: Yup.string().trim().min(2).required(),
+        featured: Yup.boolean(),
     });
 
     useEffect(() => {
@@ -193,7 +195,8 @@ const ProductsManagement = () => {
             description: product.description,
             category: product.category,
             stock: product.stock,
-            brand: product.brand
+            brand: product.brand,
+            featured: Boolean(product.featured)
         });
         // Reset new selections; existing images are shown separately
         setImages([]);
@@ -239,6 +242,19 @@ const ProductsManagement = () => {
         return {};
     };
 
+    const toggleFeatured = async (product) => {
+        try {
+            const config = await getAuthConfig();
+            const next = !Boolean(product.featured);
+            await axios.put(`/admin/product/${product._id}`, { featured: next }, config);
+            toast.success(next ? 'Marked as Featured' : 'Unfeatured product');
+            await fetchProducts();
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Failed to toggle featured';
+            toast.error(msg);
+        }
+    };
+
     const confirmDelete = async () => {
         setDeleting(true);
         try {
@@ -261,6 +277,16 @@ const ProductsManagement = () => {
         }
     };
 
+    // Improved table spacing and readability
+    const tableStyles = {
+        table: { style: { width: '100%' } },
+        headRow: { style: { minHeight: '58px', backgroundColor: '#f7fafc', borderBottom: '1px solid #e2e8f0' } },
+        headCells: { style: { fontSize: '14px', fontWeight: 700, color: '#2d3748', padding: '14px 18px' } },
+        rows: { style: { minHeight: '60px', fontSize: '14px' } },
+        cells: { style: { padding: '14px 18px' } },
+        pagination: { style: { padding: '10px 16px' } }
+    };
+
     const columns = [
         {
             name: "Image",
@@ -274,14 +300,24 @@ const ProductsManagement = () => {
             ),
             sortable: false,
         },
-        { name: "Name", selector: (row) => row.name, sortable: true, grow: 2 },
-        { name: "Price", selector: (row) => row.price, sortable: true, width: "120px" },
-        { name: "Category", selector: (row) => row.category, sortable: true, width: "140px" },
+        { name: "Name", selector: (row) => row.name, sortable: true, grow: 3 },
+        { name: "Price", selector: (row) => row.price, sortable: true, width: "140px" },
+        { name: "Category", selector: (row) => row.category, sortable: true, grow: 2 },
+        {
+            name: "Featured",
+            width: "150px",
+            sortable: true,
+            cell: (row) => (
+                <span className={`status-badge ${row.featured ? 'status-active' : 'status-inactive'}`}>
+                    {row.featured ? 'Yes' : 'No'}
+                </span>
+            ),
+        },
         {
             name: "Stock",
             selector: (row) => row.stock,
             sortable: true,
-            width: "120px",
+            width: "140px",
             cell: (row) => (
                 <span className={`status-badge ${row.stock > 10 ? 'status-active' : 'status-inactive'}`}>
                     {row.stock}
@@ -296,12 +332,15 @@ const ProductsManagement = () => {
         },
         {
             name: "Actions",
-            width: "170px",
+            width: "260px",
             sortable: false,
             cell: (row) => (
                 <div style={{ display: "flex", gap: "8px" }}>
                     <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(row.original)}>
                         Edit
+                    </button>
+                    <button className="btn btn-outline-primary btn-sm" onClick={() => toggleFeatured(row.original)}>
+                        {row.featured ? 'Unfeature' : 'Feature'}
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => openDeleteSingle(row.id)}>
                         Delete
@@ -319,6 +358,7 @@ const ProductsManagement = () => {
         image: p.images?.[0]?.url || "/images/default-product.png",
         stock: p.stock,
         category: p.category,
+        featured: Boolean(p.featured),
         // Guard against non-numeric ratings causing toFixed errors
         rating: Number(p.ratings ?? 0).toFixed(1),
         original: p
@@ -332,9 +372,6 @@ const ProductsManagement = () => {
                 <div className="card-header d-flex align-items-center justify-content-between">
                     <h2 className="card-title">Products Management</h2>
                     <div>
-                        <Button variant="contained" color="primary" onClick={() => setShowAddForm(true)}>
-                            Add New Product
-                        </Button>
                         <Button variant="outlined" color="error" sx={{ ml: 1 }} onClick={openDeleteBulk}>
                             Delete Selected
                         </Button>
@@ -465,6 +502,18 @@ const ProductsManagement = () => {
                                         helperText={formErrors.brand || 'e.g., Nourishy'}
                                     />
                                 </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                name="featured"
+                                                checked={Boolean(formData.featured)}
+                                                onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                                            />
+                                        }
+                                        label="Featured product"
+                                    />
+                                </Grid>
                                 <Grid item xs={12}>
                                     <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Inventory</Typography>
                                     <Divider sx={{ mb: 2 }} />
@@ -578,6 +627,7 @@ const ProductsManagement = () => {
                     <DataTable
                         data={rows}
                         columns={columns}
+                        customStyles={tableStyles}
                         pagination
                         selectableRows
                         onSelectedRowsChange={(state) => {

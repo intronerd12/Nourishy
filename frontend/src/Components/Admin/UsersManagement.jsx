@@ -12,6 +12,7 @@ const UsersManagement = () => {
     const [showUserModal, setShowUserModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [updatingRole, setUpdatingRole] = useState({}); // { [userId]: boolean }
+    const [updatingStatus, setUpdatingStatus] = useState({}); // { [userId]: boolean }
     const [deletingUser, setDeletingUser] = useState({}); // { [userId]: boolean }
     const { isAuthenticated, loading: authLoading } = useAuth();
 
@@ -68,6 +69,21 @@ const UsersManagement = () => {
         }
     };
 
+    const handleToggleActive = async (userId, nextActive) => {
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [userId]: true }));
+            const config = { headers: { 'Content-Type': 'application/json' } };
+            await axios.put(`/admin/user/${userId}/status`, { isActive: nextActive }, config);
+            await fetchUsers();
+            toast.success(`User ${nextActive ? 'activated' : 'deactivated'}`);
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Failed to update user status';
+            toast.error(msg);
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [userId]: false }));
+        }
+    };
+
     const openUserModal = (user) => {
         setSelectedUser(user);
         setShowUserModal(true);
@@ -104,17 +120,6 @@ const UsersManagement = () => {
                 <div className="header-content">
                     <h1 className="page-title">Users Management</h1>
                     <p className="page-subtitle">Manage your store efficiently</p>
-                </div>
-                <div className="header-actions">
-                    <button className="btn btn-primary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                        Add User
-                    </button>
                 </div>
             </div>
 
@@ -218,6 +223,7 @@ const UsersManagement = () => {
                                     <th>User</th>
                                     <th>Email</th>
                                     <th>Role</th>
+                                    <th>Status</th>
                                     <th>Joined Date</th>
                                     <th>Actions</th>
                                 </tr>
@@ -253,6 +259,11 @@ const UsersManagement = () => {
                                             </select>
                                         </td>
                                         <td>
+                                            <span className={`status-badge ${user.isActive ? 'status-active' : 'status-inactive'}`}>
+                                                {user.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>
                                             <span className="join-date">{formatDate(user.createdAt)}</span>
                                         </td>
                                         <td>
@@ -266,6 +277,17 @@ const UsersManagement = () => {
                                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                                         <circle cx="12" cy="12" r="3"/>
                                                     </svg>
+                                                </button>
+                                                <button
+                                                    className={`btn btn-sm ${user.isActive ? 'btn-warning' : 'btn-success'}`}
+                                                    onClick={() => handleToggleActive(user._id, !user.isActive)}
+                                                    disabled={!!updatingStatus[user._id]}
+                                                    title={user.isActive ? 'Deactivate User' : 'Activate User'}
+                                                >
+                                                    {user.isActive ? 'Deactivate' : 'Activate'}
+                                                    {updatingStatus[user._id] && (
+                                                        <span className="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                                    )}
                                                 </button>
                                                 <button 
                                                     className="btn btn-sm btn-danger"
@@ -350,6 +372,10 @@ const UsersManagement = () => {
                                 <div className="col-12 col-md-6 mb-3">
                                     <div className="text-muted small">Email Verified</div>
                                     <div className="fw-medium">{selectedUser.isEmailVerified ? 'Yes' : 'No'}</div>
+                                </div>
+                                <div className="col-12 col-md-6 mb-3">
+                                    <div className="text-muted small">Account Status</div>
+                                    <div className="fw-medium">{selectedUser.isActive ? 'Active' : 'Inactive'}</div>
                                 </div>
                                 <div className="col-12 col-md-6 mb-3">
                                     <div className="text-muted small">Role</div>

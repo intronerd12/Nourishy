@@ -92,6 +92,16 @@ const OrdersManagement = () => {
   }
 
   // DataTable columns
+  // Improved table spacing and readability
+  const tableStyles = {
+    table: { style: { width: '100%' } },
+    headRow: { style: { minHeight: '58px', backgroundColor: '#f7fafc', borderBottom: '1px solid #e2e8f0' } },
+    headCells: { style: { fontSize: '14px', fontWeight: 700, color: '#2d3748', padding: '14px 18px' } },
+    rows: { style: { minHeight: '60px', fontSize: '14px' } },
+    cells: { style: { padding: '14px 18px' } },
+    pagination: { style: { padding: '10px 16px' } }
+  };
+
   const columns = [
     {
       name: 'Order',
@@ -109,7 +119,7 @@ const OrdersManagement = () => {
       name: 'Customer',
       selector: row => row.customerName,
       sortable: false,
-      grow: 1,
+      grow: 2,
       cell: (row) => (
         <div>
           <div>{row.customerName || '—'}</div>
@@ -121,13 +131,13 @@ const OrdersManagement = () => {
       name: 'Date',
       selector: row => row.createdAt,
       sortable: true,
-      width: '200px',
+      width: '220px',
       cell: (row) => new Date(row.createdAt).toLocaleString(),
     },
     {
       name: 'Status',
       sortable: false,
-      width: '240px',
+      width: '320px',
       cell: (row) => (
         <div className="d-flex align-items-center gap-2" style={{ width: '100%' }}>
           <select
@@ -151,7 +161,7 @@ const OrdersManagement = () => {
       name: 'Total',
       selector: row => row.totalPrice,
       sortable: true,
-      width: '140px',
+      width: '160px',
       cell: (row) => (
         <div style={{ textAlign: 'right', width: '100%' }}>
           ₱{formatCurrency(row.totalPrice)}
@@ -162,7 +172,7 @@ const OrdersManagement = () => {
       name: 'Items',
       selector: row => row.itemsCount,
       sortable: true,
-      width: '120px',
+      width: '140px',
       cell: (row) => (
         <span className="badge items-badge">{row.itemsCount || 0} ITEMS</span>
       ),
@@ -200,6 +210,7 @@ const OrdersManagement = () => {
           <DataTable
             columns={columns}
             data={rows}
+            customStyles={tableStyles}
             pagination
             paginationPerPage={10}
             paginationRowsPerPageOptions={[5, 10, 20]}

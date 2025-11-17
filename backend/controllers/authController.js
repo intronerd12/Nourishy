@@ -2,6 +2,7 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendEmail } = require('../config/email');
+const { getAdminAuth } = require('../config/firebaseAdmin');
 
 // Helper function to send token response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -223,12 +224,76 @@ exports.loginUser = async (req, res, next) => {
             });
         }
 
+        // Block login for deactivated accounts
+        if (user.isActive === false) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account is deactivated. Please contact support or an administrator.'
+            });
+        }
+
         sendTokenResponse(user, 200, res);
     } catch (error) {
         res.redirect('http://localhost:5174/login?error=server_error');
     }
 };
 
+
+exports.googleLogin = async (req, res, next) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing Google ID token"
+            });
+        }
+
+        // Verify token with Firebase Admin
+        const adminAuth = getAdminAuth();
+        const decoded = await adminAuth.verifyIdToken(idToken);
+
+        const { email, name, picture, uid } = decoded;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Google account does not have an email"
+            });
+        }
+
+        // Look for existing user
+        let user = await User.findOne({ email });
+
+        // If user does not exist — create one
+        if (!user) {
+            const avatar = {
+                public_id: "google_avatar",
+                url: picture || "https://res.cloudinary.com/demo/image/upload/v1/default_avatar.png"
+            };
+
+            user = await User.create({
+                name: name || email.split("@")[0],
+                email,
+                avatar,
+                isEmailVerified: true,     // Google accounts are verified
+                provider: "google",
+                firebaseUID: uid
+            });
+        }
+
+        // Normal JWT login
+        sendTokenResponse(user, 200, res);
+    } catch (error) {
+        console.error("Google login error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Google login failed",
+            error: error.message
+        });
+    }
+};
 // Logout user => /api/v1/logout
 exports.logout = async (req, res, next) => {
     res.cookie('token', null, {
@@ -361,6 +426,30 @@ exports.updateUserRole = async (req, res, next) => {
         }
 
         res.status(200).json({ success: true, message: 'Role updated', user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Update user activation status => /api/v1/admin/user/:id/status
+exports.updateUserStatus = async (req, res, next) => {
+    try {
+        const { isActive } = req.body;
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({ success: false, message: 'Invalid status value' });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { isActive },
+            { new: true, runValidators: true, useFindAndModify: false }
+        );
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        res.status(200).json({ success: true, message: 'Status updated', user });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
