@@ -6,7 +6,7 @@ import MetaData from '../Layout/MetaData'
 import { useAuth } from '../../contexts/AuthContext'
 
 const ProductDetails = ({ addItemToCart, cartItems }) => {
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, user } = useAuth()
     const [product, setProduct] = useState({})
     const [error, setError] = useState('')
     const [quantity, setQuantity] = useState(1)
@@ -72,7 +72,12 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
             navigate(`/loginregister?redirect=${encodeURIComponent(window.location.pathname)}`)
             return
         }
-        
+        // Guard: prevent adding when the product is out of stock
+        if (product?.stock === 0) {
+            toast.error('Product is out of stock')
+            return
+        }
+
         setAddingToCart(true)
         try {
             await addItemToCart(id, quantity);
@@ -198,7 +203,9 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
                                         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
                                         background: 'white',
                                         aspectRatio: '1',
-                                        position: 'relative'
+                                        position: 'relative',
+                                        width: '100%',
+                                        height: 'auto'
                                     }}
                                 >
                                     <img 
@@ -297,15 +304,7 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
                                     Product ID: {product._id}
                                 </p>
 
-                                {/* Rating */}
-                                <div className="d-flex align-items-center mb-4">
-                                    <div className="me-3">
-                                        {renderStars(Math.round(product.ratings || 0))}
-                                    </div>
-                                    <span className="text-muted">
-                                        ({product.numOfReviews || 0} reviews)
-                                    </span>
-                                </div>
+                                {/* Removed reviewers names block as requested */}
 
                                 {/* Price */}
                                 <div className="mb-4">
@@ -425,13 +424,66 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
                                     </p>
                                 </div>
 
-                                {/* Seller Information */}
-                                {product.seller && (
-                                    <div className="mb-4 p-3 rounded-3" style={{ background: '#f8fafc' }}>
-                                        <small className="text-muted">Sold by</small>
-                                        <div className="fw-semibold">{product.seller}</div>
+                                {/* Seller Information removed as requested */}
+
+                                {/* Ratings & Reviews */}
+                                <div className="mt-4">
+                                    <h5 className="fw-bold mb-3">Ratings & Reviews</h5>
+                                    {/* Summary */}
+                                    <div className="d-flex align-items-center mb-3">
+                                        <div className="me-3">
+                                            {renderStars(Math.round(product?.ratings || 0))}
+                                        </div>
+                                        <div className="text-muted small">
+                                            {Number(product?.ratings || 0).toFixed(1)} average • {(product?.numOfReviews || (product?.reviews?.length || 0))} review{((product?.numOfReviews || (product?.reviews?.length || 0)) !== 1) ? 's' : ''}
+                                        </div>
                                     </div>
-                                )}
+
+                                    {/* User's own review (if any) */}
+                                    {isAuthenticated && (product?.reviews || []).some(r => String(r.user) === String(user?._id)) && (
+                                        <div className="p-3 mb-3 rounded-3" style={{ background: '#f8fafc' }}>
+                                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                                <span className="fw-semibold">Your Review</span>
+                                                <span className="badge bg-primary">You</span>
+                                            </div>
+                                            {(() => {
+                                                const mine = (product?.reviews || []).find(r => String(r.user) === String(user?._id))
+                                                if (!mine) return null
+                                                return (
+                                                    <>
+                                                        <div className="mb-1">{renderStars(Number(mine.rating || 0))}</div>
+                                                        <div className="text-muted">{mine.comment}</div>
+                                                    </>
+                                                )
+                                            })()}
+                                        </div>
+                                    )}
+
+                                    {/* All reviews */}
+                                    <div className="list-group">
+                                        {(product?.reviews || []).length === 0 ? (
+                                            <div className="text-muted">No reviews yet</div>
+                                        ) : (
+                                            (product.reviews || [])
+                                                .slice()
+                                                .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                                                .map((rev) => (
+                                                    <div key={rev._id || rev.user} className="list-group-item border-0 px-0 py-3">
+                                                        <div className="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <div className="fw-semibold">{rev.name || 'Anonymous'}</div>
+                                                                <div className="small text-muted">{new Date(rev.createdAt || Date.now()).toLocaleDateString()}</div>
+                                                            </div>
+                                                            <div>{renderStars(Number(rev.rating || 0))}</div>
+                                                        </div>
+                                                        {rev.comment && (
+                                                            <div className="mt-2 text-muted" style={{ whiteSpace: 'pre-wrap' }}>{rev.comment}</div>
+                                                        )}
+                                                    </div>
+                                                ))
+                                        )}
+                                    </div>
+                                </div>
 
 
                             </div>

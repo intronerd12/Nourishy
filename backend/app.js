@@ -14,9 +14,31 @@ const sensor = require('./routes/sensor');
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+
+// CORS: allow configurable origins, permissive in development
+const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || '';
+const allowedOrigins = allowedOriginsEnv
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
-    credentials: true
+  origin: (origin, callback) => {
+    // Allow non-browser requests or same-origin
+    if (!origin) return callback(null, true);
+
+    const isDev = process.env.NODE_ENV !== 'PRODUCTION';
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+
+    if (isDev && (isLocalhost || allowedOrigins.length === 0)) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked origin: ${origin}`));
+  },
+  credentials: true,
 }));
 app.use(morgan('dev'));
 

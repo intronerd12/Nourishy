@@ -72,7 +72,8 @@ export const signInWithGoogle = async () => {
     // -------------------------------------------------
     // 🔥 CALL YOUR BACKEND TO LOGIN / REGISTER USER
     // -------------------------------------------------
-    const backendResponse = await fetch("http://localhost:5000/api/v1/auth/google", {
+    const apiBase = import.meta.env.VITE_API || 'http://localhost:4000/api/v1';
+    const backendResponse = await fetch(`${apiBase}/auth/google`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

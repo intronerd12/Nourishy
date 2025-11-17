@@ -151,9 +151,12 @@ const OrdersManagement = () => {
       name: 'Total',
       selector: row => row.totalPrice,
       sortable: true,
-      right: true,
       width: '140px',
-      cell: (row) => `₱${formatCurrency(row.totalPrice)}`,
+      cell: (row) => (
+        <div style={{ textAlign: 'right', width: '100%' }}>
+          ₱{formatCurrency(row.totalPrice)}
+        </div>
+      ),
     },
     {
       name: 'Items',

@@ -7,7 +7,8 @@
     "start": "nodemon server.js",
     "seed:products": "node utils/seeder.js --import",
     "seed:users": "node utils/seeder.js --users",
-    "seed:delete": "node utils/seeder.js --delete"
+    "seed:delete": "node utils/seeder.js --delete",
+    "import-images": "node utils/importLocalProductImages.js"
   },
   "author": "",
   "license": "ISC",

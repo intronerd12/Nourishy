@@ -75,14 +75,17 @@ const Shop = ({ addItemToCart, cartItems }) => {
             product.price >= priceRange[0] && product.price <= priceRange[1]
         )
 
-        // Filter by minimum rating
-        if (minRating > 0) {
-            filtered = filtered.filter(product => (product.ratings || 0) >= minRating)
+        // Filter to only products with at least one review (registered users)
+        if (onlyReviewed) {
+            filtered = filtered.filter(product => (product.reviews?.length || 0) > 0)
         }
 
-        // Filter to only products with at least one review
-        if (onlyReviewed) {
-            filtered = filtered.filter(product => (product.numOfReviews || 0) > 0)
+        // Filter by minimum rating based on HIGHEST user rating per product
+        if (minRating > 0) {
+            filtered = filtered.filter(p => {
+                const max = Math.max(0, ...((p.reviews || []).map(r => Number(r.rating || 0))))
+                return max >= minRating
+            })
         }
 
         // Sort products
@@ -94,7 +97,11 @@ const Shop = ({ addItemToCart, cartItems }) => {
                 filtered.sort((a, b) => (b.price || 0) - (a.price || 0))
                 break
             case 'rating':
-                filtered.sort((a, b) => (b.ratings || 0) - (a.ratings || 0))
+                filtered.sort((a, b) => {
+                    const maxA = Math.max(0, ...((a.reviews || []).map(r => Number(r.rating || 0))))
+                    const maxB = Math.max(0, ...((b.reviews || []).map(r => Number(r.rating || 0))))
+                    return maxB - maxA
+                })
                 break
             case 'name':
                 filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
@@ -122,33 +129,33 @@ const Shop = ({ addItemToCart, cartItems }) => {
         return fallbackImages[product.category] || fallbackImages['Shampoo']
     }
 
-    // Helper function to render stars
-    const renderStars = (rating) => {
-        const stars = [];
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 !== 0;
-
-        for (let i = 0; i < fullStars; i++) {
-            stars.push(
-                <i key={i} className="fa fa-star star-rating" style={{color: '#ffc107'}}></i>
-            );
-        }
-
-        if (hasHalfStar) {
-            stars.push(
-                <i key="half" className="fa fa-star-half-o star-rating" style={{color: '#ffc107'}}></i>
-            );
-        }
-
-        const emptyStars = 5 - Math.ceil(rating);
-        for (let i = 0; i < emptyStars; i++) {
-            stars.push(
-                <i key={`empty-${i}`} className="fa fa-star-o" style={{color: '#e4e5e9'}}></i>
-            );
-        }
-
-        return stars;
+    // Helper to render reviewer names from registered users
+    const renderReviewerNames = (product) => {
+        const names = (product.reviews || []).map(r => r?.name).filter(Boolean);
+        if (names.length === 0) return <span className="text-muted small">No reviews yet</span>;
+        return <span className="small">Reviewed by: {names.join(', ')}</span>;
     };
+
+    // Render star icons for the HIGHEST rating the product has received
+    const renderHighestRatingStars = (product) => {
+        const max = Math.max(0, ...((product.reviews || []).map(r => Number(r.rating || 0))))
+        const stars = []
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <i
+                    key={i}
+                    className={`fas fa-star ${i <= max ? 'text-warning' : 'text-muted'}`}
+                    style={{ fontSize: '1rem', marginRight: '0.1rem' }}
+                />
+            )
+        }
+        return (
+            <div className="d-flex align-items-center">
+                {stars}
+                <span className="small text-muted ms-2">Highest: {max}★</span>
+            </div>
+        )
+    }
 
 
 
@@ -158,7 +165,12 @@ const Shop = ({ addItemToCart, cartItems }) => {
             navigate(`/loginregister?redirect=${encodeURIComponent(window.location.pathname)}`)
             return
         }
-        
+        // Client-side guard: prevent adding out-of-stock and show feedback
+        const p = products.find(x => x._id === productId)
+        if (p && p.stock === 0) {
+            toast.error('Product is out of stock')
+            return
+        }
         try {
             await addItemToCart(productId, 1)
         } catch (error) {
@@ -424,13 +436,12 @@ const Shop = ({ addItemToCart, cartItems }) => {
                                                     {product.description}
                                                 </Card.Text>
                                                 
-                                                {/* Rating */}
-                                                <div className="d-flex align-items-center mb-3">
-                                                    <div className="d-flex align-items-center me-2">
-                                                        {renderStars(product.ratings)}
-                                                    </div>
-                                                    <span className="fw-semibold small">{product.ratings || 0}</span>
-                                                    <span className="text-muted small ms-1">({product.numOfReviews || 0})</span>
+                                                {/* Reviews snapshot: reviewer names and highest rating */}
+                                                <div className="mb-2">
+                                                    {renderReviewerNames(product)}
+                                                </div>
+                                                <div className="mb-3">
+                                                    {renderHighestRatingStars(product)}
                                                 </div>
 
                                                 {/* Price and Actions */}

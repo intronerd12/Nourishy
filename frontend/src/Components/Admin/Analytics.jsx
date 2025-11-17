@@ -28,7 +28,7 @@ const Analytics = () => {
         totalProducts: 0,
         totalUsers: 0
     });
-    const [granularity, setGranularity] = useState('month');
+    const [granularity, setGranularity] = useState('week');
     const [loading, setLoading] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -214,20 +214,6 @@ const Analytics = () => {
                                 <option value="month">Month</option>
                                 <option value="year">Year</option>
                             </select>
-                            <input
-                                type="date"
-                                className="select select-sm"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                aria-label="Start date"
-                            />
-                            <input
-                                type="date"
-                                className="select select-sm"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                aria-label="End date"
-                            />
                             <select
                                 className="select select-sm"
                                 value={chartType}
@@ -427,23 +413,35 @@ const Analytics = () => {
                             {userStats.length > 0 ? (
                             <ResponsiveContainer width="100%" height={320}>
                                 <PieChart>
-                                    <Pie
-                                        data={userStats}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                        innerRadius={55}
-                                        outerRadius={95}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                        stroke="#ffffff"
-                                        strokeWidth={2}
-                                    >
-                                        {userStats.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
+                                    {(() => {
+                                        const adminEntry = userStats.find((u) => /admin/i.test(u.name));
+                                        const nonAdminTotal = userStats
+                                            .filter((u) => !/admin/i.test(u.name))
+                                            .reduce((sum, u) => sum + Number(u.value || 0), 0);
+                                        const userDistribution = [
+                                            { name: 'Users', value: nonAdminTotal, color: '#82ca9d' },
+                                            { name: 'Admins', value: Number(adminEntry?.value || 0), color: '#ffc658' },
+                                        ];
+                                        return (
+                                            <Pie
+                                                data={userDistribution}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, value }) => `${name} ${Number(value).toLocaleString()}`}
+                                                innerRadius={55}
+                                                outerRadius={95}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                                stroke="#ffffff"
+                                                strokeWidth={2}
+                                            >
+                                                {userDistribution.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                        );
+                                    })()}
                                     <Tooltip content={<CustomTooltip />} />
                                 </PieChart>
                             </ResponsiveContainer>

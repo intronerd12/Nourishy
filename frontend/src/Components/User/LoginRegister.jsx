@@ -40,7 +40,14 @@ const LoginRegister = () => {
     const navigate = useNavigate()
     const location = useLocation()
 
-    const redirect = location.search ? new URLSearchParams(location.search).get('redirect') : ''
+    // Resolve redirect path from query or navigation state
+    const searchParams = new URLSearchParams(location.search)
+    const redirectRaw = searchParams.get('redirect') || ''
+    const redirectFromState = location.state?.from || ''
+    const redirectCandidate = redirectRaw || redirectFromState
+    const redirectPath = redirectCandidate
+        ? (redirectCandidate.startsWith('/') ? redirectCandidate : `/${redirectCandidate}`)
+        : ''
 
     useEffect(() => {
         if (location.pathname === '/register') {
@@ -56,10 +63,10 @@ const LoginRegister = () => {
             if (user.role === 'admin') {
                 navigate('/admin/dashboard')
             } else {
-                navigate(redirect ? `/${redirect}` : '/')
+                navigate(redirectPath || '/')
             }
         }
-    }, [isAuthenticated, user, navigate, redirect])
+    }, [isAuthenticated, user, navigate, redirectPath])
 
     const handleLoginSubmit = async (e) => {
         e.preventDefault()
@@ -122,8 +129,8 @@ const LoginRegister = () => {
     }
 
     useEffect(() => {
-        if (isAuthenticated && redirect === 'shipping') {
-            navigate(`/${redirect}`)
+        if (isAuthenticated && redirectPath === '/shipping') {
+            navigate('/shipping')
         }
     }, [])
 
@@ -179,7 +186,8 @@ const LoginRegister = () => {
                                             }`}
                                             onClick={() => {
                                                 setActiveTab('login')
-                                                navigate('/login')
+                                                const qs = redirectRaw ? `?redirect=${encodeURIComponent(redirectRaw)}` : ''
+                                                navigate(`/login${qs}`, { state: location.state })
                                             }}
                                             style={{
                                                 borderRadius: '1.5rem 0 0 0',
@@ -198,7 +206,8 @@ const LoginRegister = () => {
                                             }`}
                                             onClick={() => {
                                                 setActiveTab('register')
-                                                navigate('/register')
+                                                const qs = redirectRaw ? `?redirect=${encodeURIComponent(redirectRaw)}` : ''
+                                                navigate(`/register${qs}`, { state: location.state })
                                             }}
                                             style={{
                                                 borderRadius: '0 1.5rem 0 0',

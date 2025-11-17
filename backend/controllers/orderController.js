@@ -79,6 +79,16 @@ exports.newOrder = async (req, res, next) => {
             user: req.user._id
         });
 
+        // Immediately deduct stock so subsequent purchases reflect updated availability
+        try {
+            for (const item of order.orderItems) {
+                await updateStock(item.product, item.quantity);
+            }
+        } catch (stockErr) {
+            console.error('Failed to deduct stock on order creation:', stockErr);
+            // Proceed with order success; stock issues are logged for admin follow-up
+        }
+
         // Build order confirmation email
         try {
             const formatCurrency = (n) => Number(n || 0).toFixed(2);
@@ -298,11 +308,7 @@ exports.updateOrder = async (req, res, next) => {
         const prevStatus = order.orderStatus;
         const nextStatus = String(status || '').trim();
 
-        if (nextStatus === 'Confirmed' && prevStatus !== 'Confirmed' && prevStatus !== 'Delivered') {
-            for (const item of order.orderItems) {
-                await updateStock(item.product, item.quantity);
-            }
-        }
+        // Stock is now deducted at order creation; avoid double-deducting here
 
         order.orderStatus = nextStatus || order.orderStatus;
 
@@ -449,7 +455,8 @@ exports.deleteOrder = async (req, res, next) => {
             });
         }
 
-        await order.remove();
+        // Mongoose v7+ removed document.remove(); use deleteOne on the model/document
+        await Order.deleteOne({ _id: order._id });
 
         res.status(200).json({
             success: true
@@ -459,5 +466,34 @@ exports.deleteOrder = async (req, res, next) => {
             success: false,
             message: error.message
         });
+    }
+};
+
+// Delete own order (user) => /api/v1/order/:id
+exports.deleteMyOrder = async (req, res, next) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'No Order found with this ID'
+            });
+        }
+
+        // Ensure the authenticated user owns this order
+        if (String(order.user) !== String(req.user._id)) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to delete this order'
+            });
+        }
+
+        // Use a safe deletion that also scopes to the owner
+        await Order.deleteOne({ _id: order._id, user: req.user._id });
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };

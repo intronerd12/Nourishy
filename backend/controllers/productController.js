@@ -166,6 +166,19 @@ exports.bulkDeleteProducts = async (req, res) => {
     try {
         const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
         if (ids.length === 0) return res.status(400).json({ success: false, message: 'No product IDs provided' });
+
+        // Fetch products first to clean up Cloudinary assets
+        const products = await Product.find({ _id: { $in: ids } });
+        for (const p of products) {
+            try {
+                for (const img of (p.images || [])) {
+                    if (img.public_id) {
+                        try { await cloudinary.uploader.destroy(img.public_id); } catch (_) {}
+                    }
+                }
+            } catch (_) {}
+        }
+
         const result = await Product.deleteMany({ _id: { $in: ids } });
         return res.status(200).json({ success: true, deletedCount: result.deletedCount });
     } catch (error) {

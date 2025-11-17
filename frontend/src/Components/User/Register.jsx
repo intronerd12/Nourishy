@@ -69,7 +69,7 @@ const Register = () => {
                 }
             }
 
-            const { data } = await axios.post(`http://localhost:4001/api/v1/register`, userData, config)
+            const { data } = await axios.post(`/register`, userData, config)
             console.log(data)
 
             setLoading(false)

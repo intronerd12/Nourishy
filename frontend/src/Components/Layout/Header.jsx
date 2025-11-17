@@ -25,17 +25,13 @@ const Header = ({cartItems}) => {
 
     return (
         <>
-            {/* Top banner */}
-            <div className="text-white text-center py-2 small bg-primary-dark">
-                Free shipping on orders over ₱2,500 • 30-day money-back guarantee
-            </div>
+            {/* Top banner removed per request */}
 
             {/* Navbar */}
             <nav className="navbar navbar-expand-lg navbar-dark bg-primary-dark">
                 <div className="container-fluid">
                     <Link className="navbar-brand d-flex align-items-center" to="/">
-                        <img src="./images/nourishy_logo.svg" alt="Nourishy Hair Products" style={{height: '36px'}} />
-                        <span className="ms-2 fw-semibold">Nourishy</span>
+                        <span className="brand-text">Nourishy</span>
                     </Link>
 
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">

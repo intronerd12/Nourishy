@@ -310,18 +310,20 @@ input:focus, textarea:focus, select:focus {
   position: relative;
   overflow: hidden;
   aspect-ratio: 1;
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  background: #ffffff;
 }
 
 .product-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  object-fit: contain;
+  object-position: center;
+  background-color: #ffffff;
+  transition: opacity 0.4s ease;
 }
 
 .product-card:hover .product-image {
-  transform: scale(1.1);
+  transform: none;
 }
 
 /* Product Content */
@@ -871,4 +873,14 @@ input:focus, textarea:focus, select:focus {
   color: var(--primary);
   font-weight: 600;
   role: status;
+}
+
+/* Brand word styling for header */
+.brand-text {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-weight: 800;
+  font-size: clamp(2rem, 2.8vw + 1rem, 3.2rem);
+  letter-spacing: -0.02em;
+  color: #1f2937; /* deep charcoal, not green */
+  line-height: 1;
 }

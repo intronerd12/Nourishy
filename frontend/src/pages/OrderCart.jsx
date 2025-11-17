@@ -775,6 +775,7 @@ const ProductCard = ({ product, getProductImage, customizationOptions, addToOrde
     }, [product.category, customizationOptions])
 
     const handleAddToOrder = () => {
+        if (product.stock === 0) return
         addToOrder(product, { size: selectedSize, quantity })
         setQuantity(1)
     }
@@ -799,6 +800,9 @@ const ProductCard = ({ product, getProductImage, customizationOptions, addToOrde
                 <Badge bg="primary" className="product-category-badge">
                     {product.category}
                 </Badge>
+                {product.stock === 0 && (
+                    <Badge bg="danger" className="ms-2">Out of Stock</Badge>
+                )}
             </div>
             <Card.Body className="d-flex flex-column">
                 <Card.Title className="h6 mb-2">{product.name}</Card.Title>
@@ -830,6 +834,7 @@ const ProductCard = ({ product, getProductImage, customizationOptions, addToOrde
                             variant="outline-secondary" 
                             size="sm"
                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            disabled={product.stock === 0}
                         >
                             -
                         </Button>
@@ -837,7 +842,8 @@ const ProductCard = ({ product, getProductImage, customizationOptions, addToOrde
                         <Button 
                             variant="outline-secondary" 
                             size="sm"
-                            onClick={() => setQuantity(quantity + 1)}
+                            onClick={() => setQuantity(Math.min(product.stock || 1, quantity + 1))}
+                            disabled={product.stock === 0}
                         >
                             +
                         </Button>
@@ -862,9 +868,10 @@ const ProductCard = ({ product, getProductImage, customizationOptions, addToOrde
                     variant="primary" 
                     className="add-to-order-btn"
                     onClick={handleAddToOrder}
+                    disabled={product.stock === 0}
                 >
                     <i className="fas fa-plus me-2"></i>
-                    Add to Order
+                    {product.stock === 0 ? 'Out of Stock' : 'Add to Order'}
                 </Button>
             </Card.Body>
         </Card>

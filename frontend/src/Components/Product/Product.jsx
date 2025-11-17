@@ -159,7 +159,9 @@ const Product = ({ product }) => {
                         alt={product.name} 
                         className="w-100 h-100 product-image"
                         style={{
-                            objectFit: 'cover',
+                            objectFit: 'contain',
+                            objectPosition: 'center',
+                            backgroundColor: '#ffffff',
                             transition: 'transform 0.6s ease',
                             opacity: imageLoaded ? 1 : 0
                         }}
@@ -206,28 +208,16 @@ const Product = ({ product }) => {
                         {product.description || 'Premium hair care product for healthy, beautiful hair.'}
                     </p>
                     
-                    {/* Rating */}
-                    <div className="d-flex align-items-center mb-3">
-                        <div className="rating-outer me-2" style={{position: 'relative', display: 'inline-block'}}>
-                            <div 
-                                className="rating-inner"
-                                style={{ 
-                                    width: `${(product.ratings / 5) * 100}%`,
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    color: '#fbbf24'
-                                }}
-                            >
-                                ★★★★★
-                            </div>
-                            <div style={{color: '#e5e7eb'}}>★★★★★</div>
-                        </div>
-                        <small className="text-muted fw-medium">
-                            {product.ratings?.toFixed(1) || '4.5'} ({product.numOfReviews || 0})
-                        </small>
+                    {/* Reviewers (registered users only) */}
+                    <div className="mb-3">
+                        {(() => {
+                            const names = (product.reviews || []).map(r => r?.name).filter(Boolean);
+                            return names.length === 0 ? (
+                                <small className="text-muted">No reviews yet</small>
+                            ) : (
+                                <small className="fw-medium">Reviewed by: {names.join(', ')}</small>
+                            );
+                        })()}
                     </div>
                     
                     {/* Price and Action */}

@@ -3,7 +3,6 @@
         "name": "Nourishy Hydrating Shampoo",
         "price": 1399,
         "description": "Our hydrating shampoo gently cleanses while infusing moisture into dry, damaged hair. Formulated with natural oils and botanical extracts to restore shine and softness.",
-        "ratings": 4.8,
         "images": [{
             "public_id": "products/nourishy_shampoo",
             "url": "https://res.cloudinary.com/demo/image/upload/v1612345678/products/nourishy_shampoo.jpg"
@@ -11,7 +10,6 @@
         "category": "Shampoo",
         "seller": "Nourishy",
         "stock": 50,
-        "numOfReviews": 32,
         "reviews": [],
         "featured": true
     },
@@ -19,7 +17,6 @@
         "name": "Nourishy Repair Conditioner",
         "price": 1299,
         "description": "Deep conditioning treatment that repairs damaged hair and split ends. Enriched with keratin and argan oil to strengthen hair from within.",
-        "ratings": 4.7,
         "images": [{
             "public_id": "products/nourishy_conditioner",
             "url": "https://res.cloudinary.com/demo/image/upload/v1612345679/products/nourishy_conditioner.jpg"
@@ -27,7 +24,6 @@
         "category": "Conditioner",
         "seller": "Nourishy",
         "stock": 45,
-        "numOfReviews": 28,
         "reviews": [],
         "featured": true
     },
@@ -35,7 +31,6 @@
         "name": "Nourishy Argan Hair Oil",
         "price": 1099,
         "description": "Luxurious hair oil that tames frizz and adds brilliant shine. Made with 100% pure argan oil to nourish and protect hair from heat damage.",
-        "ratings": 4.9,
         "images": [{
             "public_id": "products/nourishy_oil",
             "url": "https://res.cloudinary.com/demo/image/upload/v1612345680/products/nourishy_oil.jpg"
@@ -43,7 +38,6 @@
         "category": "Hair Oil",
         "seller": "Nourishy",
         "stock": 60,
-        "numOfReviews": 42,
         "reviews": [],
         "featured": true
     },
@@ -51,7 +45,6 @@
         "name": "Nourishy Intensive Hair Mask",
         "price": 1699,
         "description": "Weekly treatment mask that deeply conditions and restores severely damaged hair. Contains shea butter and coconut oil for maximum hydration.",
-        "ratings": 4.6,
         "images": [{
             "public_id": "products/nourishy_mask",
             "url": "https://res.cloudinary.com/demo/image/upload/v1612345681/products/nourishy_mask.jpg"
@@ -59,7 +52,6 @@
         "category": "Hair Mask",
         "seller": "Nourishy",
         "stock": 35,
-        "numOfReviews": 24,
         "reviews": [],
         "featured": true
     },
@@ -67,7 +59,6 @@
         "name": "Nourishy Smoothing Serum",
         "price": 1049,
         "description": "Lightweight serum that eliminates frizz and adds silky smoothness. Perfect for all hair types, especially curly and wavy hair.",
-        "ratings": 4.5,
         "images": [{
             "public_id": "products/nourishy_serum",
             "url": "https://res.cloudinary.com/demo/image/upload/v1612345682/products/nourishy_serum.jpg"
@@ -75,15 +66,13 @@
         "category": "Hair Serum",
         "seller": "Nourishy",
         "stock": 55,
-        "numOfReviews": 36,
         "reviews": [],
         "featured": false
     },
-    {
+  {
         "name": "Nourishy Volume Spray",
         "price": 949,
         "description": "Volumizing spray that adds body and lift to fine, limp hair. Creates fullness without stickiness or residue.",
-        "ratings": 4.3,
         "images": [{
             "public_id": "products/nourishy_spray",
             "url": "https://res.cloudinary.com/demo/image/upload/v1612345683/products/nourishy_spray.jpg"
@@ -91,8 +80,274 @@
         "category": "Hair Spray",
         "seller": "Nourishy",
         "stock": 40,
-        "numOfReviews": 22,
         "reviews": [],
         "featured": true
+    }
+  ,
+    {
+        "name": "Nourishy Clarifying Shampoo",
+        "price": 299,
+        "description": "Clarifying shampoo that removes product buildup and excess oil while keeping hair balanced. Ideal for weekly deep cleanse.",
+        "images": [{
+            "public_id": "products/nourishy_clarifying_shampoo",
+            "url": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=400&fit=crop"
+        }],
+        "category": "Shampoo",
+        "seller": "Nourishy",
+        "stock": 100,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Anti-Dandruff Shampoo",
+        "price": 499,
+        "description": "Soothing anti-dandruff formula with zinc and tea tree to calm itching and reduce flakes, gentle enough for daily use.",
+        "images": [{
+            "public_id": "products/nourishy_anti_dandruff_shampoo",
+            "url": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=400&fit=crop"
+        }],
+        "category": "Shampoo",
+        "seller": "Nourishy",
+        "stock": 90,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Keratin Smooth Shampoo",
+        "price": 999,
+        "description": "Keratin-infused shampoo that smooths frizz and strengthens the hair shaft for a sleek, polished finish.",
+        "images": [{
+            "public_id": "products/nourishy_keratin_shampoo",
+            "url": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=400&fit=crop"
+        }],
+        "category": "Shampoo",
+        "seller": "Nourishy",
+        "stock": 80,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Color-Safe Conditioner",
+        "price": 599,
+        "description": "Color-protect conditioner that locks in vibrancy while moisturizing and detangling colored hair without heaviness.",
+        "images": [{
+            "public_id": "products/nourishy_color_safe_conditioner",
+            "url": "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=400&h=400&fit=crop"
+        }],
+        "category": "Conditioner",
+        "seller": "Nourishy",
+        "stock": 85,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Deep Repair Conditioner",
+        "price": 899,
+        "description": "Intensive conditioner with amino acids to repair split ends and improve elasticity for stronger, softer hair.",
+        "images": [{
+            "public_id": "products/nourishy_deep_repair_conditioner",
+            "url": "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=400&h=400&fit=crop"
+        }],
+        "category": "Conditioner",
+        "seller": "Nourishy",
+        "stock": 70,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Biotin Strength Conditioner",
+        "price": 1099,
+        "description": "Fortifying conditioner with biotin and peptides to reduce breakage and promote thicker-feeling hair.",
+        "images": [{
+            "public_id": "products/nourishy_biotin_conditioner",
+            "url": "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=400&h=400&fit=crop"
+        }],
+        "category": "Conditioner",
+        "seller": "Nourishy",
+        "stock": 60,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Coconut Hair Oil",
+        "price": 399,
+        "description": "Lightweight coconut hair oil that nourishes dry lengths, adds shine, and reduces frizz without greasiness.",
+        "images": [{
+            "public_id": "products/nourishy_coconut_oil",
+            "url": "https://images.unsplash.com/photo-1570554886111-e80fcca6a029?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Oil",
+        "seller": "Nourishy",
+        "stock": 120,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Scalp Tonic Hair Oil",
+        "price": 799,
+        "description": "Revitalizing scalp tonic oil with peppermint and rosemary to soothe dryness and support a healthy scalp.",
+        "images": [{
+            "public_id": "products/nourishy_scalp_tonic_oil",
+            "url": "https://images.unsplash.com/photo-1570554886111-e80fcca6a029?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Oil",
+        "seller": "Nourishy",
+        "stock": 75,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Lightweight Shine Serum",
+        "price": 699,
+        "description": "Featherlight serum that adds instant gloss and smoothness to dull hair, perfect as a finishing touch.",
+        "images": [{
+            "public_id": "products/nourishy_lightweight_serum",
+            "url": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Serum",
+        "seller": "Nourishy",
+        "stock": 95,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Heat Protect Hair Serum",
+        "price": 899,
+        "description": "Thermal-protect serum that guards hair up to 230°C, reducing breakage from styling tools.",
+        "images": [{
+            "public_id": "products/nourishy_heat_protect_serum",
+            "url": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Serum",
+        "seller": "Nourishy",
+        "stock": 85,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Strong Hold Hair Spray",
+        "price": 549,
+        "description": "High-hold hairspray that keeps styles in place all day with humidity resistance.",
+        "images": [{
+            "public_id": "products/nourishy_strong_hold_spray",
+            "url": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Spray",
+        "seller": "Nourishy",
+        "stock": 110,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Flexible Hold Hair Spray",
+        "price": 649,
+        "description": "Brushable hairspray that offers flexible hold and natural movement without tackiness.",
+        "images": [{
+            "public_id": "products/nourishy_flexible_hold_spray",
+            "url": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Spray",
+        "seller": "Nourishy",
+        "stock": 100,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Premium Salon Hair Mask",
+        "price": 1999,
+        "description": "Luxurious salon-grade hair mask with ceramides and shea butter to deeply repair and hydrate brittle hair.",
+        "images": [{
+            "public_id": "products/nourishy_premium_mask",
+            "url": "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Mask",
+        "seller": "Nourishy",
+        "stock": 50,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Advanced Repair Serum",
+        "price": 2299,
+        "description": "Concentrated leave-in serum with peptides and arginine to rebuild damaged areas and enhance shine.",
+        "images": [{
+            "public_id": "products/nourishy_advanced_serum",
+            "url": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Serum",
+        "seller": "Nourishy",
+        "stock": 45,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Herbal Growth Hair Oil",
+        "price": 899,
+        "description": "Herbal-infused hair oil with rosemary and castor to support growth, reduce breakage, and boost shine.",
+        "images": [{
+            "public_id": "products/nourishy_herbal_growth_oil",
+            "url": "https://images.unsplash.com/photo-1600180758890-6b94519a8a6e?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Oil",
+        "seller": "Nourishy",
+        "stock": 85,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Lightweight Repair Hair Oil",
+        "price": 749,
+        "description": "Ultra-light hair oil that repairs split ends and smooths frizz without weighing hair down.",
+        "images": [{
+            "public_id": "products/nourishy_lightweight_repair_oil",
+            "url": "https://images.unsplash.com/photo-1570554886111-e80fcca6a029?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Oil",
+        "seller": "Nourishy",
+        "stock": 90,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Moisture Surge Hair Mask",
+        "price": 1499,
+        "description": "Deeply hydrating hair mask with hyaluronic acid and shea butter to replenish moisture for soft, silky hair.",
+        "images": [{
+            "public_id": "products/nourishy_moisture_surge_mask",
+            "url": "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Mask",
+        "seller": "Nourishy",
+        "stock": 60,
+        "reviews": [],
+        "featured": true
+    },
+    {
+        "name": "Nourishy Strength & Restore Hair Mask",
+        "price": 1799,
+        "description": "Protein-rich mask with keratin and biotin to strengthen weak strands and reduce breakage.",
+        "images": [{
+            "public_id": "products/nourishy_strength_restore_mask",
+            "url": "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Mask",
+        "seller": "Nourishy",
+        "stock": 55,
+        "reviews": [],
+        "featured": false
+    },
+    {
+        "name": "Nourishy Color Care Hair Mask",
+        "price": 1699,
+        "description": "Color-protecting mask that locks in vibrancy while nourishing dyed hair to keep it soft and shiny.",
+        "images": [{
+            "public_id": "products/nourishy_color_care_mask",
+            "url": "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop"
+        }],
+        "category": "Hair Mask",
+        "seller": "Nourishy",
+        "stock": 50,
+        "reviews": [],
+        "featured": false
     }
 ]

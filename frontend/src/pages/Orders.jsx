@@ -19,6 +19,8 @@ const Orders = () => {
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [rating, setRating] = useState(0)
     const [comment, setComment] = useState('')
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteOrderId, setDeleteOrderId] = useState(null)
 
     const { loading: authLoading, isAuthenticated, user } = useAuth()
 
@@ -147,17 +149,27 @@ const Orders = () => {
         }
     }
 
-    const handleDeleteOrder = async (orderId) => {
-        if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-            try {
-                // Mock API call - replace with actual endpoint
-                console.log(`Deleting order ${orderId}`)
-                
-                setOrders(orders.filter(order => order._id !== orderId))
-                toast.success('Order deleted successfully')
-            } catch (error) {
-                toast.error('Failed to delete order')
-            }
+    const handleDeleteOrder = (orderId) => {
+        setDeleteOrderId(orderId)
+        setShowDeleteModal(true)
+    }
+
+    const confirmDeleteOrder = async () => {
+        if (!deleteOrderId) return
+        try {
+            await axios.delete(`/order/${deleteOrderId}`)
+            setOrders(orders.filter(order => order._id !== deleteOrderId))
+            toast.success('Order deleted successfully')
+        } catch (error) {
+            const status = error.response?.status
+            const msg =
+                status === 403
+                    ? 'You can only delete your own order'
+                    : error.response?.data?.message || 'Failed to delete order'
+            toast.error(msg)
+        } finally {
+            setShowDeleteModal(false)
+            setDeleteOrderId(null)
         }
     }
 
@@ -465,6 +477,32 @@ const Orders = () => {
                         </Button>
                         <Button variant="primary" onClick={submitReview}>
                             Submit Review
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                {/* Delete Confirmation Modal */}
+                <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Delete Order</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {(() => {
+                            const target = orders.find(o => o._id === deleteOrderId)
+                            const number = target?.orderNumber || deleteOrderId?.slice?.(-8)?.toUpperCase()
+                            return (
+                                <p>
+                                    Are you sure you want to delete order #{number}? This action cannot be undone.
+                                </p>
+                            )
+                        })()}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="danger" onClick={confirmDeleteOrder}>
+                            Delete
                         </Button>
                     </Modal.Footer>
                 </Modal>

@@ -15,29 +15,36 @@ module.exports = function generateReceiptPdf(order, user) {
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
+      // Brand palette
+      const brandGreen = '#2e7d32'; // primary green
+      const brandDarkGreen = '#1b5e20'; // darker accent
+      const yellowGreen = '#9ccc65'; // highlight lime/green
+      const lightGreenBg = '#f1f8e9'; // subtle background tint
+      const lightBorder = '#e0e0e0';
+
       // Use 'Php' text instead of the peso symbol to ensure printers render correctly
       const peso = (n) => `Php ${Number(n || 0).toFixed(2)}`;
       const orderDate = new Date(order.paidAt || Date.now()).toLocaleString();
 
       // Brand header
       doc
-        .fillColor('#333')
+        .fillColor(brandGreen)
         .fontSize(22)
         .text('Nourishy', { align: 'left' });
       doc
         .fontSize(10)
-        .fillColor('#666')
+        .fillColor(yellowGreen)
         .text('Order Confirmation Receipt', { align: 'left' })
         .moveDown(0.5);
 
       // Horizontal rule
-      doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#e0e0e0').stroke();
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(yellowGreen).stroke();
       doc.moveDown();
 
       // Order meta
       doc
         .fontSize(12)
-        .fillColor('#333')
+        .fillColor(brandDarkGreen)
         .text(`Order ID: ${order._id}`)
         .text(`Order Date: ${orderDate}`)
         .moveDown();
@@ -45,7 +52,7 @@ module.exports = function generateReceiptPdf(order, user) {
       // Bill to
       doc
         .fontSize(12)
-        .fillColor('#333')
+        .fillColor(brandDarkGreen)
         .text('Billed To:', { continued: false })
         .moveDown(0.25);
       doc
@@ -58,7 +65,7 @@ module.exports = function generateReceiptPdf(order, user) {
       // Shipping info
       doc
         .fontSize(12)
-        .fillColor('#333')
+        .fillColor(brandDarkGreen)
         .text('Shipping To:', { continued: false })
         .moveDown(0.25);
       doc
@@ -72,16 +79,20 @@ module.exports = function generateReceiptPdf(order, user) {
 
       // Items table header
       const tableTop = doc.y + 10;
-      doc.fontSize(11).fillColor('#333');
+      // Header background tint
+      doc.save();
+      doc.rect(50, tableTop - 4, 495, 22).fill(lightGreenBg);
+      doc.restore();
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(brandDarkGreen);
       doc.text('Product', 50, tableTop);
       doc.text('Qty', 300, tableTop, { width: 50, align: 'center' });
       doc.text('Price', 360, tableTop, { width: 90, align: 'right' });
       doc.text('Subtotal', 460, tableTop, { width: 85, align: 'right' });
-      doc.moveTo(50, tableTop + 15).lineTo(545, tableTop + 15).strokeColor('#e0e0e0').stroke();
+      doc.moveTo(50, tableTop + 15).lineTo(545, tableTop + 15).strokeColor(lightBorder).stroke();
 
       let y = tableTop + 25;
       (order.orderItems || []).forEach((item) => {
-        doc.fillColor('#555').fontSize(10);
+        doc.font('Helvetica').fillColor('#555').fontSize(10);
         doc.text(item.name || '', 50, y);
         doc.text(String(item.quantity || 0), 300, y, { width: 50, align: 'center' });
         doc.text(peso(item.price || 0), 360, y, { width: 90, align: 'right' });
@@ -110,26 +121,32 @@ module.exports = function generateReceiptPdf(order, user) {
       ];
 
       const boxHeight = headerHeight + rows.length * lineHeight + 18; // padding bottom
-      doc.rect(boxLeft, summaryTop, boxWidth, boxHeight).strokeColor('#e0e0e0').stroke();
+      // Box background + border
+      doc.save();
+      doc.rect(boxLeft, summaryTop, boxWidth, boxHeight).fill(lightGreenBg);
+      doc.rect(boxLeft, summaryTop, boxWidth, boxHeight).strokeColor(yellowGreen).lineWidth(1).stroke();
+      // Header bar
+      doc.rect(boxLeft, summaryTop, boxWidth, headerHeight).fill(brandGreen);
+      doc.restore();
 
-      doc.fontSize(11).fillColor('#333').text('Summary', labelX, summaryTop + 8);
+      doc.font('Helvetica-Bold').fontSize(11).fillColor('#ffffff').text('Summary', labelX, summaryTop + 6);
 
       let rowY = summaryTop + headerHeight;
       rows.forEach((row) => {
         if (row.isTotal) {
-          doc.fontSize(11).fillColor('#333').text(row.label, labelX, rowY);
-          doc.fontSize(12).fillColor('#000').text(row.value, amountX, rowY, { width: amountBlockWidth, align: 'right' });
+          doc.font('Helvetica-Bold').fontSize(11).fillColor(brandDarkGreen).text(row.label, labelX, rowY);
+          doc.font('Helvetica-Bold').fontSize(12).fillColor(brandDarkGreen).text(row.value, amountX, rowY, { width: amountBlockWidth, align: 'right' });
         } else {
-          doc.fontSize(10).fillColor('#555').text(row.label, labelX, rowY);
-          doc.fontSize(10).fillColor('#555').text(row.value, amountX, rowY, { width: amountBlockWidth, align: 'right' });
+          doc.font('Helvetica').fontSize(10).fillColor('#555').text(row.label, labelX, rowY);
+          doc.font('Helvetica').fontSize(10).fillColor('#555').text(row.value, amountX, rowY, { width: amountBlockWidth, align: 'right' });
         }
         rowY += lineHeight;
       });
 
       // Footer
       doc.moveDown(2);
-      doc.fontSize(10).fillColor('#666').text('This receipt confirms your successful purchase. Thank you for shopping with Nourishy.');
-      doc.fontSize(9).fillColor('#999').text('If you have any questions, reply to this email.');
+      doc.fontSize(10).fillColor(brandDarkGreen).text('This receipt confirms your successful purchase. Thank you for shopping with Nourishy.');
+      doc.fontSize(9).fillColor('#777').text('If you have any questions, reply to this email.');
 
       doc.end();
 

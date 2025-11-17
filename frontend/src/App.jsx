@@ -73,26 +73,38 @@ function App() {
     try {
       const { data } = await axios.get(`${import.meta.env.VITE_API}/product/${id}`)
       const fetched = data.product
+      // Prevent adding items that are out of stock
+      if (!fetched || fetched.stock <= 0) {
+        toast.error('Product is out of stock', { position: 'top-center' })
+        return
+      }
       const newItem = {
         product: fetched._id,
         name: fetched.name,
         price: fetched.price,
         image: fetched.images?.[0]?.url,
         stock: fetched.stock,
-        quantity: quantity
+        quantity: Math.max(1, Math.min(Number(quantity) || 1, fetched.stock))
       }
 
       setState(prev => {
         const existing = prev.cartItems.find(i => i.product === newItem.product)
         let nextCart
         if (existing) {
-          // Increment quantity for existing item
-          nextCart = prev.cartItems.map(i =>
-            i.product === newItem.product
-              ? { ...i, quantity: i.quantity + quantity }
-              : i
-          )
+          // Increment quantity for existing item but cap at available stock
+          nextCart = prev.cartItems.map(i => {
+            if (i.product === newItem.product) {
+              const proposed = (Number(i.quantity) || 1) + (Number(quantity) || 1)
+              const capped = Math.min(proposed, fetched.stock)
+              if (proposed > fetched.stock) {
+                toast.warn(`Only ${fetched.stock} in stock`, { position: 'top-center' })
+              }
+              return { ...i, quantity: Math.max(1, capped), stock: fetched.stock }
+            }
+            return i
+          })
         } else {
+          // Add new item with quantity capped by stock
           nextCart = [...prev.cartItems, newItem]
         }
         return { ...prev, cartItems: nextCart }

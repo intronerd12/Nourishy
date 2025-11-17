@@ -3,6 +3,34 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 import DataTable from 'react-data-table-component';
+import { useAuth } from '../../contexts/AuthContext';
+import { auth } from '../../utils/firebase';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    FormHelperText,
+    Checkbox,
+    FormControlLabel,
+    Button,
+    Grid,
+    ImageList,
+    ImageListItem,
+    Chip,
+    Stack,
+    Alert,
+    Box,
+    Divider,
+    InputAdornment,
+    Tooltip,
+    Typography
+} from '@mui/material';
 
 const ProductsManagement = () => {
     const [products, setProducts] = useState([]);
@@ -14,6 +42,9 @@ const ProductsManagement = () => {
     const [clearExistingImages, setClearExistingImages] = useState(false);
     const [removedExisting, setRemovedExisting] = useState([]); // track objects { public_id, url }
     const [selectedIds, setSelectedIds] = useState([]);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteDialogState, setDeleteDialogState] = useState({ mode: 'single', id: null, count: 0 });
+    const [deleting, setDeleting] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         price: '',
@@ -23,6 +54,7 @@ const ProductsManagement = () => {
         brand: ''
     });
     const [formErrors, setFormErrors] = useState({});
+    const { isAuthenticated, user, loading: authLoading } = useAuth();
 
     const MAX_IMAGES = 6;
 
@@ -57,6 +89,11 @@ const ProductsManagement = () => {
         e.preventDefault();
 
         try {
+            if (authLoading) return; // wait until auth initializes
+            if (!isAuthenticated || (user && user.role !== 'admin')) {
+                toast.error('You must be an admin to perform this action');
+                return;
+            }
             setFormErrors({});
             await productSchema.validate(formData, { abortEarly: false });
 
@@ -74,6 +111,15 @@ const ProductsManagement = () => {
             }
 
             const config = { headers: { 'Content-Type': 'multipart/form-data' } };
+            try {
+                // Refresh Firebase ID token to avoid 401 on admin routes
+                if (auth?.currentUser) {
+                    const idToken = await auth.currentUser.getIdToken(true);
+                    config.headers.Authorization = `Bearer ${idToken}`;
+                }
+            } catch (_) {
+                // fall back to axios defaults
+            }
 
             if (editingProduct) {
                 await axios.put(`/admin/product/${editingProduct._id}`, form, config);
@@ -95,7 +141,8 @@ const ProductsManagement = () => {
                 setFormErrors(errs);
                 toast.error('Please fix validation errors.');
             } else {
-                toast.error('Failed to save product');
+                const msg = error.response?.data?.message || 'Failed to save product';
+                toast.error(msg);
             }
         }
     };
@@ -155,16 +202,9 @@ const ProductsManagement = () => {
         setRemovedExisting([]);
     };
 
-    const handleDelete = async (productId) => {
-        if (!window.confirm("Delete this product?")) return;
-
-        try {
-            await axios.delete(`/admin/product/${productId}`);
-            toast.success("Product deleted");
-            fetchProducts();
-        } catch {
-            toast.error("Failed to delete product");
-        }
+    const openDeleteSingle = (productId) => {
+        setDeleteDialogState({ mode: 'single', id: productId, count: 1 });
+        setDeleteDialogOpen(true);
     };
 
     const resetForm = () => {
@@ -185,18 +225,39 @@ const ProductsManagement = () => {
         setRemovedExisting([]);
     };
 
-    const handleBulkDelete = async () => {
+    const openDeleteBulk = () => {
         if (selectedIds.length === 0) return toast.info("No selected items");
+        setDeleteDialogState({ mode: 'bulk', id: null, count: selectedIds.length });
+        setDeleteDialogOpen(true);
+    };
 
-        if (!window.confirm(`Delete ${selectedIds.length} items?`)) return;
-
+    const getAuthConfig = async () => {
         try {
-            await axios.post(`/admin/products/bulk-delete`, { ids: selectedIds });
-            toast.success("Selected products deleted");
-            setSelectedIds([]);
-            fetchProducts();
-        } catch {
-            toast.error("Bulk delete failed");
+            const token = await auth.currentUser?.getIdToken(true);
+            if (token) return { headers: { Authorization: `Bearer ${token}` } };
+        } catch (_) {}
+        return {};
+    };
+
+    const confirmDelete = async () => {
+        setDeleting(true);
+        try {
+            const config = await getAuthConfig();
+            if (deleteDialogState.mode === 'single' && deleteDialogState.id) {
+                await axios.delete(`/admin/product/${deleteDialogState.id}`, config);
+                toast.success('Product deleted permanently');
+            } else if (deleteDialogState.mode === 'bulk') {
+                await axios.post(`/admin/products/bulk-delete`, { ids: selectedIds }, config);
+                toast.success(`Deleted ${deleteDialogState.count} products permanently`);
+                setSelectedIds([]);
+            }
+            setDeleteDialogOpen(false);
+            await fetchProducts();
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Failed to delete product(s)';
+            toast.error(msg);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -242,7 +303,7 @@ const ProductsManagement = () => {
                     <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(row.original)}>
                         Edit
                     </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(row.id)}>
+                    <button className="btn btn-danger btn-sm" onClick={() => openDeleteSingle(row.id)}>
                         Delete
                     </button>
                 </div>
@@ -268,160 +329,252 @@ const ProductsManagement = () => {
     return (
         <div className="products-management">
             <div className="card">
-                <div className="card-header">
+                <div className="card-header d-flex align-items-center justify-content-between">
                     <h2 className="card-title">Products Management</h2>
-                    <button className="btn btn-primary" onClick={() => setShowAddForm(true)}>Add New Product</button>
-                    <button className="btn btn-danger" style={{ marginLeft: 12 }} onClick={handleBulkDelete}>
-                        Delete Selected
-                    </button>
+                    <div>
+                        <Button variant="contained" color="primary" onClick={() => setShowAddForm(true)}>
+                            Add New Product
+                        </Button>
+                        <Button variant="outlined" color="error" sx={{ ml: 1 }} onClick={openDeleteBulk}>
+                            Delete Selected
+                        </Button>
+                    </div>
                 </div>
 
-                {/* ------------------------ FORM MODAL ------------------------ */}
-                {showAddForm && (
-                    <div className="product-form-overlay">
-                        <div className="card">
-                            <div className="card-header">
-                                <h3>{editingProduct ? "Edit Product" : "Add New Product"}</h3>
-                            </div>
-                            <div className="card-body">
-                                <form onSubmit={handleSubmit}>
-                                    {/* All your inputs kept EXACTLY AS THEY ARE */}
-                                    <div className="form-group">
-                                        <label>Product Name</label>
-                                        <input
-                                            name="name"
-                                            value={formData.name}
+                {/* Delete Confirmation Dialog */}
+                <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle>
+                        {deleteDialogState.mode === 'single' ? 'Delete Product' : 'Delete Selected Products'}
+                    </DialogTitle>
+                    <DialogContent dividers>
+                        <Alert severity="warning" sx={{ mb: 2 }}>
+                            Are you sure you want to remove {deleteDialogState.mode === 'single' ? 'this product' : `${deleteDialogState.count} products`}?
+                        </Alert>
+                        <Box sx={{ color: 'text.secondary' }}>
+                            This action is permanent. Deleted item(s) will be removed from MongoDB and cannot be recovered.
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Cancel</Button>
+                        <Button variant="contained" color="error" onClick={confirmDelete} disabled={deleting}>
+                            {deleting ? 'Deleting…' : 'Delete'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog 
+                    open={showAddForm} 
+                    onClose={resetForm} 
+                    fullWidth 
+                    maxWidth="md"
+                    PaperProps={{ sx: { borderRadius: 3, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' } }}
+                >
+                    <DialogTitle>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                            <Typography variant="h6" fontWeight={700}>
+                                {editingProduct ? 'Edit Product' : 'Add New Product'}
+                            </Typography>
+                            <Chip label={editingProduct ? 'Updating' : 'Creating'} size="small" color={editingProduct ? 'warning' : 'primary'} sx={{ ml: 1 }} />
+                        </Stack>
+                    </DialogTitle>
+                    <DialogContent dividers sx={{ background: 'linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%)' }}>
+                        {!isAuthenticated && !authLoading && (
+                            <Alert severity="warning" sx={{ mb: 2 }}>
+                                You are not logged in. Log in as admin to save changes.
+                            </Alert>
+                        )}
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Fill out the fields below. Images can be added or removed; clearing existing images will remove all current product photos.
+                        </Typography>
+                        <Box component="form" onSubmit={handleSubmit} noValidate>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Basic Information</Typography>
+                                    <Divider sx={{ mb: 2 }} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="Product Name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        error={Boolean(formErrors.name)}
+                                        helperText={formErrors.name}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="Price"
+                                        type="number"
+                                        name="price"
+                                        value={formData.price}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        error={Boolean(formErrors.price)}
+                                        helperText={formErrors.price || 'Enter the product price'}
+                                        InputProps={{ startAdornment: <InputAdornment position="start">₱</InputAdornment> }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        label="Description"
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        multiline
+                                        minRows={3}
+                                        error={Boolean(formErrors.description)}
+                                        helperText={formErrors.description}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Classification</Typography>
+                                    <Divider sx={{ mb: 2 }} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <FormControl fullWidth error={Boolean(formErrors.category)}>
+                                        <InputLabel id="category-label">Category</InputLabel>
+                                        <Select
+                                            labelId="category-label"
+                                            label="Category"
+                                            name="category"
+                                            value={formData.category}
                                             onChange={handleInputChange}
-                                            className="form-control"
-                                        />
-                                        {formErrors.name && <small className="text-danger">{formErrors.name}</small>}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Price (₱)</label>
-                                        <input type="number" name="price" value={formData.price}
-                                            onChange={handleInputChange} />
-                                        {formErrors.price && <small className="text-danger">{formErrors.price}</small>}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Description</label>
-                                        <textarea name="description" rows="4"
-                                            value={formData.description}
-                                            onChange={handleInputChange} />
-                                        {formErrors.description && <small className="text-danger">{formErrors.description}</small>}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Category</label>
-                                        <select name="category" value={formData.category} onChange={handleInputChange}>
-                                            <option value="">Select Category</option>
-                                            <option value="Shampoo">Shampoo</option>
-                                            <option value="Conditioner">Conditioner</option>
-                                            <option value="Hair Oil">Hair Oil</option>
-                                            <option value="Hair Mask">Hair Mask</option>
-                                            <option value="Hair Serum">Hair Serum</option>
-                                            <option value="Hair Spray">Hair Spray</option>
-                                        </select>
-                                        {formErrors.category && <small className="text-danger">{formErrors.category}</small>}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Brand</label>
-                                        <input name="brand" value={formData.brand} onChange={handleInputChange} />
-                                        {formErrors.brand && <small className="text-danger">{formErrors.brand}</small>}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Stock</label>
-                                        <input type="number" name="stock" value={formData.stock} onChange={handleInputChange} />
-                                        {formErrors.stock && <small className="text-danger">{formErrors.stock}</small>}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Images</label>
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={handleImageSelect}
-                                        />
-                                        <small className="text-muted" style={{ display: 'block', marginTop: 6 }}>
+                                        >
+                                            <MenuItem value="">Select Category</MenuItem>
+                                            <MenuItem value="Shampoo">Shampoo</MenuItem>
+                                            <MenuItem value="Conditioner">Conditioner</MenuItem>
+                                            <MenuItem value="Hair Oil">Hair Oil</MenuItem>
+                                            <MenuItem value="Hair Mask">Hair Mask</MenuItem>
+                                            <MenuItem value="Hair Serum">Hair Serum</MenuItem>
+                                            <MenuItem value="Hair Spray">Hair Spray</MenuItem>
+                                        </Select>
+                                        {formErrors.category && <FormHelperText>{formErrors.category}</FormHelperText>}
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="Brand"
+                                        name="brand"
+                                        value={formData.brand}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        error={Boolean(formErrors.brand)}
+                                        helperText={formErrors.brand || 'e.g., Nourishy'}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Inventory</Typography>
+                                    <Divider sx={{ mb: 2 }} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label="Stock"
+                                        type="number"
+                                        name="stock"
+                                        value={formData.stock}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        error={Boolean(formErrors.stock)}
+                                        helperText={formErrors.stock || '0 means out of stock'}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Stack direction="row" alignItems="center" spacing={2}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Media</Typography>
+                                        <Tooltip title="Add up to 6 images">
+                                            <Button variant="outlined" component="label">
+                                                Choose Files
+                                                <input hidden type="file" multiple accept="image/*" onChange={handleImageSelect} />
+                                            </Button>
+                                        </Tooltip>
+                                        <Box component="span" sx={{ color: 'text.secondary' }}>
                                             {images.length}/{MAX_IMAGES} selected
-                                        </small>
-                                        {editingProduct && Array.isArray(editingProduct.images) && editingProduct.images.length > 0 && (
-                                            <div style={{ marginTop: 12 }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <strong>Existing Images</strong>
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={clearExistingImages}
-                                                            onChange={(e) => setClearExistingImages(e.target.checked)}
-                                                        />
+                                        </Box>
+                                    </Stack>
+                                </Grid>
+                                {editingProduct && Array.isArray(editingProduct.images) && editingProduct.images.length > 0 && (
+                                    <Grid item xs={12}>
+                                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                                            <strong>Existing Images</strong>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={clearExistingImages}
+                                                        onChange={(e) => setClearExistingImages(e.target.checked)}
+                                                    />
+                                                }
+                                                label={
+                                                    <Tooltip title="Remove all current photos">
                                                         <span>Clear existing images</span>
-                                                    </label>
-                                                </div>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
-                                                    {editingProduct.images.map((img) => {
-                                                        const pid = img.public_id || img.url;
-                                                        const removed = removedExisting.some(r => (r.public_id || r.url) === pid);
-                                                        return (
-                                                            <div key={pid} style={{ position: 'relative' }}>
-                                                                <img
-                                                                    src={img.url}
-                                                                    alt={editingProduct.name}
-                                                                    style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #ddd', filter: removed ? 'grayscale(100%)' : 'none', opacity: removed ? 0.6 : 1 }}
-                                                                />
-                                                                <button
-                                                                    type="button"
-                                                                    className={removed ? 'btn btn-secondary btn-sm' : 'btn btn-danger btn-sm'}
-                                                                    style={{ position: 'absolute', top: -8, right: -8, padding: '2px 6px' }}
-                                                                    onClick={() => toggleRemoveExisting(img)}
-                                                                >
-                                                                    {removed ? 'Restore' : 'Remove'}
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <small className="text-muted" style={{ display: 'block', marginTop: 6 }}>
-                                                    New images will be added; selected thumbnails marked "Remove" will be deleted. Use "Clear existing images" to remove all.
-                                                </small>
-                                            </div>
-                                        )}
-                                        {imagePreviews.length > 0 && (
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
-                                                {imagePreviews.map((img, idx) => (
-                                                    <div key={img.url} style={{ position: 'relative' }}>
-                                                        <img src={img.url} alt={img.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #ddd' }} />
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-danger btn-sm"
-                                                            style={{ position: 'absolute', top: -8, right: -8, padding: '2px 6px' }}
-                                                            onClick={() => removeSelectedImage(idx)}
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                                    </Tooltip>
+                                                }
+                                            />
+                                        </Stack>
+                                        <Box sx={{ border: '1px dashed #cbd5e1', borderRadius: 2, p: 1 }}>
+                                            <ImageList cols={6} gap={8}>
+                                            {editingProduct.images.map((img) => {
+                                                const pid = img.public_id || img.url;
+                                                const removed = removedExisting.some(r => (r.public_id || r.url) === pid);
+                                                return (
+                                                    <ImageListItem key={pid} sx={{ position: 'relative' }}>
+                                                        <img
+                                                            src={img.url}
+                                                            alt={editingProduct.name}
+                                                            style={{ width: '100%', height: '100%', objectFit: 'cover', filter: removed ? 'grayscale(100%)' : 'none', opacity: removed ? 0.6 : 1 }}
+                                                        />
+                                                        <Chip
+                                                            label={removed ? 'Restore' : 'Remove'}
+                                                            color={removed ? 'default' : 'error'}
+                                                            size="small"
+                                                            onClick={() => toggleRemoveExisting(img)}
+                                                            sx={{ position: 'absolute', top: 4, right: 4 }}
+                                                        />
+                                                    </ImageListItem>
+                                                );
+                                            })}
+                                            </ImageList>
+                                        </Box>
+                                        <Box sx={{ color: 'text.secondary', mt: 1 }}>
+                                            New images will be added; selected thumbnails marked "Remove" will be deleted. Use "Clear existing images" to remove all.
+                                        </Box>
+                                    </Grid>
+                                )}
+                                {imagePreviews.length > 0 && (
+                                    <Grid item xs={12}>
+                                        <strong>New Images</strong>
+                                        <Box sx={{ border: '1px dashed #cbd5e1', borderRadius: 2, p: 1, mt: 1 }}>
+                                            <ImageList cols={6} gap={8}>
+                                            {imagePreviews.map((img, idx) => (
+                                                <ImageListItem key={img.url} sx={{ position: 'relative' }}>
+                                                    <img src={img.url} alt={img.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <Chip
+                                                        label="Remove"
+                                                        color="error"
+                                                        size="small"
+                                                        onClick={() => removeSelectedImage(idx)}
+                                                        sx={{ position: 'absolute', top: 4, right: 4 }}
+                                                    />
+                                                </ImageListItem>
+                                            ))}
+                                            </ImageList>
+                                        </Box>
+                                    </Grid>
+                                )}
+                            </Grid>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={resetForm}>Cancel</Button>
+                        <Button variant="contained" onClick={handleSubmit}>
+                            {editingProduct ? 'Update Product' : 'Create Product'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
-                                    <div className="form-actions">
-                                        <button type="submit" className="btn btn-primary">
-                                            {editingProduct ? "Update Product" : "Create Product"}
-                                        </button>
-                                        <button type="button" className="btn btn-secondary" onClick={resetForm}>Cancel</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div style={{ width: "100%", padding: 20 }}>
+                <div style={{ width: '100%', padding: 20 }}>
                     <DataTable
                         data={rows}
                         columns={columns}

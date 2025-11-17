@@ -34,14 +34,16 @@ const verifyDatabase = async () => {
         // Check Products collection
         const productCount = await Product.countDocuments();
         const categories = await Product.distinct('category');
-        const avgRating = await Product.aggregate([
-            { $group: { _id: null, avgRating: { $avg: '$ratings' } } }
+        // Compute total reviews across products (instead of average rating)
+        const reviewsStats = await Product.aggregate([
+            { $project: { reviewCount: { $size: { $ifNull: ['$reviews', []] } } } },
+            { $group: { _id: null, totalReviews: { $sum: '$reviewCount' } } }
         ]);
 
         console.log('\n📦 PRODUCTS COLLECTION:');
         console.log(`   Total Products: ${productCount}`);
         console.log(`   Categories: ${categories.join(', ')}`);
-        console.log(`   Average Rating: ${avgRating[0]?.avgRating?.toFixed(2) || 'N/A'}`);
+        console.log(`   Total Reviews: ${reviewsStats[0]?.totalReviews ?? 0}`);
 
         // Show sample products
         const sampleProducts = await Product.find().limit(3).select('name price category');

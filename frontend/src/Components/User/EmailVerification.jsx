@@ -24,7 +24,7 @@ const EmailVerification = () => {
 
     const verifyEmail = async (verificationToken) => {
         try {
-            const { data } = await axios.get(`http://localhost:4001/api/v1/verify-email/${verificationToken}`)
+            const { data } = await axios.get(`/verify-email/${verificationToken}`)
             
             setSuccess(data.message)
             setLoading(false)
@@ -66,7 +66,7 @@ const EmailVerification = () => {
                 }
             }
             
-            const { data } = await axios.post('http://localhost:4001/api/v1/resend-verification', { email }, config)
+        const { data } = await axios.post('/resend-verification', { email }, config)
             
             setResendLoading(false)
             toast.success(data.message, {

@@ -121,6 +121,27 @@ const Home = () => {
         'Hair Spray': 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=400&fit=crop'
     }
 
+    // Render star icons for the HIGHEST rating the product has received (match Shop page)
+    const renderHighestRatingStars = (product) => {
+        const max = Math.max(0, ...((product.reviews || []).map(r => Number(r.rating || 0))))
+        const stars = []
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <i
+                    key={i}
+                    className={`fas fa-star ${i <= max ? 'text-warning' : 'text-muted'}`}
+                    style={{ fontSize: '1rem', marginRight: '0.1rem' }}
+                />
+            )
+        }
+        return (
+            <div className="d-flex align-items-center">
+                {stars}
+                {max > 0 && <span className="small text-muted ms-2">Highest: {max}★</span>}
+            </div>
+        )
+    }
+
     if (loading) {
         return <Loader />
     }
@@ -144,16 +165,7 @@ const Home = () => {
                 <div className="container position-relative" style={{zIndex: 2}}>
                     <div className="row align-items-center min-vh-100 py-5">
                         <div className="col-lg-6 pe-lg-5">
-                            <div className="mb-4">
-                                <span className="badge rounded-pill px-4 py-2 fw-medium" style={{
-                                    background: 'linear-gradient(45deg, var(--emerald-500), var(--emerald-600))',
-                                    color: 'white',
-                                    fontSize: '0.875rem',
-                                    letterSpacing: '0.5px'
-                                }}>
-                                    ✨ Naturally Nourishing Since 2020
-                                </span>
-                            </div>
+                            {/* Badge tagline removed per request */}
                             
                             <h1 className="display-3 fw-bold mb-4" style={{
                                 lineHeight: '1.1',
@@ -439,6 +451,13 @@ const Home = () => {
                                     boxShadow: '0 8px 25px rgba(var(--primary-rgb), 0.3)',
                                     fontSize: '1.1rem'
                                 }}
+                                onClick={(e) => {
+                                    // Redirect guests to login/register instead of shop
+                                    if (!isAuthenticated) {
+                                        e.preventDefault();
+                                        navigate('/loginregister');
+                                    }
+                                }}
                                 onMouseEnter={(e) => {
                                     e.target.style.transform = 'translateY(-3px)'
                                     e.target.style.boxShadow = '0 12px 35px rgba(var(--primary-rgb), 0.4)'
@@ -570,14 +589,20 @@ const Home = () => {
                                             {product.description || 'Premium hair care product for healthy, beautiful hair.'}
                                         </p>
                                         
-                                        {/* Rating */}
-                                        <div className="d-flex align-items-center mb-3">
-                                            <div className="rating-outer me-2">
-                                                <div className="rating-inner" style={{ width: `${(product.ratings / 5) * 100}%` }}></div>
-                                            </div>
-                                            <small className="text-muted fw-medium">
-                                                {product.ratings?.toFixed(1) || '4.5'} ({product.numOfReviews || 0} reviews)
-                                            </small>
+                                        {/* Reviewers (registered users only) */}
+                                        <div className="mb-3">
+                                            {(() => {
+                                                const names = (product.reviews || []).map(r => r?.name).filter(Boolean);
+                                                return names.length === 0 ? (
+                                                    <small className="text-muted">No reviews yet</small>
+                                                ) : (
+                                                    <small className="fw-medium">Reviewed by: {names.join(', ')}</small>
+                                                );
+                                            })()}
+                                        </div>
+                                        {/* Highest rating stars (match Shop page style) */}
+                                        <div className="mb-3">
+                                            {renderHighestRatingStars(product)}
                                         </div>
                                         
                                         {/* Price and Action */}
@@ -632,7 +657,7 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* All Products: Pagination / Infinite Scroll */}
+            {isAuthenticated && (
             <section className="py-5" style={{ background: '#ffffff' }}>
                 <div className="container">
                     <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -678,6 +703,10 @@ const Home = () => {
                                             <div className="card-body d-flex flex-column">
                                                 <span className="badge bg-light text-primary mb-2 align-self-start" style={{ fontSize: '0.7rem' }}>{product.category}</span>
                                                 <h6 className="fw-bold mb-2" style={{ color: '#1f2937' }}>{product.name}</h6>
+                                                {/* Highest rating stars (match Shop page style) */}
+                                                <div className="mb-2">
+                                                    {renderHighestRatingStars(product)}
+                                                </div>
                                                 <div className="d-flex justify-content-between align-items-center mt-auto">
                                                     <span className="h6 fw-bold text-primary mb-0">₱{product.price}</span>
                                                     <Link to={`/product/${product._id}`} className="btn btn-outline-primary btn-sm" onClick={(e) => handleGuestRedirection(e, `/product/${product._id}`)}>
@@ -709,6 +738,7 @@ const Home = () => {
 
                 </div>
             </section>
+            )}
 
             {/* Newsletter */}
             <section 
