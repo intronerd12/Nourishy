@@ -8,23 +8,28 @@ import { useAuth } from '../../contexts/AuthContext';
 import { auth } from '../../utils/firebase';
 import Loader from '../Layout/Loader';
 import * as Yup from 'yup'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
 
 
 const UpdateProfile = () => {
     const { user, isAuthenticated, loading: authLoading, updateUser } = useAuth();
     
-    const [name, setName] = useState('')
-    const [email, setEmail] = useState('')
+    // React Hook Form will manage name and email
     const [avatar, setAvatar] = useState('')
     const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.jpg')
     const [loading, setLoading] = useState(false)
     const [isUpdated, setIsUpdated] = useState(false)
     let navigate = useNavigate();
 
-    const [errors, setErrors] = useState({})
     const profileSchema = Yup.object().shape({
         name: Yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
         email: Yup.string().trim().email('Enter a valid email').required('Email is required')
+    })
+
+    const { register: rhfRegister, handleSubmit, formState: { errors }, reset } = useForm({
+        resolver: yupResolver(profileSchema),
+        defaultValues: { name: '', email: '' }
     })
 
     const updateProfile = async (userData) => {
@@ -78,31 +83,15 @@ const UpdateProfile = () => {
         }
 
         if (user) {
-            setName(user.name || '');
-            setEmail(user.email || '');
+            reset({ name: user.name || '', email: user.email || '' });
             setAvatarPreview(user.avatar?.url || '/images/default_avatar.jpg');
         }
-    }, [user, isAuthenticated, authLoading, navigate])
+    }, [user, isAuthenticated, authLoading, navigate, reset])
 
-    const submitHandler = async (e) => {
-        e.preventDefault();
-        try {
-            setErrors({})
-            await profileSchema.validate({ name, email }, { abortEarly: false })
-        } catch (error) {
-            if (error?.name === 'ValidationError') {
-                const fieldErrors = {}
-                error.inner.forEach(err => {
-                    if (err.path && !fieldErrors[err.path]) fieldErrors[err.path] = err.message
-                })
-                setErrors(fieldErrors)
-                toast.error('Please fix the validation errors')
-                return
-            }
-        }
+    const onSubmit = async (values) => {
         const formData = new FormData();
-        formData.set('name', name);
-        formData.set('email', email);
+        formData.set('name', values.name);
+        formData.set('email', values.email);
         formData.set('avatar', avatar);
         updateProfile(formData)
     }
@@ -137,7 +126,7 @@ const UpdateProfile = () => {
 
             <div className="row wrapper">
                 <div className="col-10 col-lg-5">
-                    <form className="shadow-lg" onSubmit={submitHandler} encType='multipart/form-data'>
+                    <form className="shadow-lg" onSubmit={handleSubmit(onSubmit)} encType='multipart/form-data'>
                         <h1 className="mt-2 mb-5">Update Profile</h1>
 
                         <div className="form-group">
@@ -147,10 +136,9 @@ const UpdateProfile = () => {
                                 id="name_field"
                                 className="form-control"
                                 name='name'
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                {...rhfRegister('name')}
                             />
-                            {errors.name && <small className="text-danger">{errors.name}</small>}
+                            {errors.name && <small className="text-danger">{errors.name.message}</small>}
                         </div>
 
                         <div className="form-group">
@@ -160,10 +148,9 @@ const UpdateProfile = () => {
                                 id="email_field"
                                 className="form-control"
                                 name='email'
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                {...rhfRegister('email')}
                             />
-                            {errors.email && <small className="text-danger">{errors.email}</small>}
+                            {errors.email && <small className="text-danger">{errors.email.message}</small>}
                         </div>
 
                         <div className='form-group'>

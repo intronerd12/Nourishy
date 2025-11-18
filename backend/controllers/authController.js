@@ -541,3 +541,48 @@ exports.resendEmailVerification = async (req, res, next) => {
         });
     }
 };
+
+// Update user password => /api/v1/password/update
+exports.updatePassword = async (req, res, next) => {
+    try {
+        const { oldPassword, password } = req.body;
+
+        if (!password || String(password).length < 6) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+        }
+
+        // Load user, including password for local-auth users
+        const user = await User.findById(req.user.id).select('+password');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // If the account is linked to Firebase, update password via Firebase Admin
+        if (user.firebaseUid) {
+            try {
+                const adminAuth = getAdminAuth();
+                await adminAuth.updateUser(user.firebaseUid, { password });
+                return res.status(200).json({ success: true, message: 'Password updated successfully' });
+            } catch (err) {
+                const msg = err?.message || 'Failed to update password via Firebase';
+                return res.status(500).json({ success: false, message: msg });
+            }
+        }
+
+        // Legacy/local password flow: verify old password then save new one
+        if (!oldPassword) {
+            return res.status(400).json({ success: false, message: 'Please provide your current password' });
+        }
+
+        const isMatched = await user.comparePassword(oldPassword);
+        if (!isMatched) {
+            return res.status(401).json({ success: false, message: 'Old password is incorrect' });
+        }
+
+        user.password = password;
+        await user.save();
+        return res.status(200).json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};

@@ -4,7 +4,7 @@ import MetaData from '../Layout/MetaData';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
-import { getToken } from '../../utils/helpers'
+import { auth } from '../../utils/firebase';
 
 
 
@@ -18,18 +18,24 @@ const UpdatePassword = () => {
     const [loading, setLoading] = useState(false)
     let navigate = useNavigate();
     
-    const updatePassword = async (formData) => {
-        console.log(formData)
+    const updatePassword = async (payload) => {
         try {
+            // Get Firebase ID token for authenticated user
+            const idToken = await auth?.currentUser?.getIdToken(true);
+            if (!idToken) {
+                toast.error('Session expired. Please login again.', { position: 'bottom-right' });
+                navigate('/loginregister');
+                return;
+            }
             const config = {
                 headers: {
                     'Content-Type': 'application/json',
-                     'Authorization': `Bearer ${getToken()}`
+                    'Authorization': `Bearer ${idToken}`
 
                 }
             }
 
-            const {data } = await axios.put('/password/update', formData, config)
+            const { data } = await axios.put('/password/update', payload, config)
             setIsUpdated(data.success)
             setLoading(false)
             toast.success('password updated', {
@@ -59,11 +65,8 @@ const UpdatePassword = () => {
     const submitHandler = (e) => {
         e.preventDefault();
 
-        const formData = new FormData();
-        formData.set('oldPassword', oldPassword);
-        formData.set('password', password);
-
-        updatePassword(formData)
+        const body = { oldPassword, password };
+        updatePassword(body)
     }
 
     return (

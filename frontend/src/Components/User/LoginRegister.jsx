@@ -7,15 +7,27 @@ import Loader from '../Layout/Loader'
 import MetaData from '../Layout/MetaData'
 import { useAuth } from '../../contexts/AuthContext'
 import * as Yup from 'yup'
+import { useFormik } from 'formik'
 
 const LoginRegister = () => {
     const { login, register, loginWithGoogle, loading, isAuthenticated, user } = useAuth()
     
-    const [loginData, setLoginData] = useState({
-        email: '',
-        password: ''
+    // Formik state for Login form
+    const loginSchema = Yup.object().shape({
+        email: Yup.string().trim().email('Enter a valid email').required('Email is required'),
+        password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
     })
-    const [loginErrors, setLoginErrors] = useState({})
+
+    const formikLogin = useFormik({
+        initialValues: { email: '', password: '' },
+        validationSchema: loginSchema,
+        onSubmit: async (values, { setSubmitting }) => {
+            await login(values.email, values.password)
+            setSubmitting(false)
+            // Notifications (success/error) are handled in AuthContext to avoid duplicates
+            // successful navigation is handled by useEffect
+        }
+    })
 
     const [registerData, setRegisterData] = useState({
         name: '',
@@ -25,11 +37,6 @@ const LoginRegister = () => {
     })
     const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.jpg')
     const [registerErrors, setRegisterErrors] = useState({})
-
-    const loginSchema = Yup.object().shape({
-        email: Yup.string().trim().email('Enter a valid email').required('Email is required'),
-        password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
-    })
 
     const registerSchema = Yup.object().shape({
         name: Yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
@@ -71,27 +78,7 @@ const LoginRegister = () => {
         }
     }, [isAuthenticated, user, navigate, redirectPath])
 
-    const handleLoginSubmit = async (e) => {
-        e.preventDefault()
-        try {
-            setLoginErrors({})
-            await loginSchema.validate(loginData, { abortEarly: false })
-        } catch (error) {
-            if (error?.name === 'ValidationError') {
-                const fieldErrors = {}
-                error.inner.forEach(err => {
-                    if (err.path && !fieldErrors[err.path]) fieldErrors[err.path] = err.message
-                })
-                setLoginErrors(fieldErrors)
-                toast.error('Please fix the validation errors')
-                return
-            }
-        }
-        const result = await login(loginData.email, loginData.password)
-        if (result.success) {
-            // Navigation is handled in useEffect above
-        }
-    }
+    // Register form handlers remain local-state based below
 
     const handleRegisterSubmit = async (e) => {
         e.preventDefault()
@@ -124,9 +111,7 @@ const LoginRegister = () => {
         }
     }
 
-    const handleLoginChange = (e) => {
-        setLoginData({ ...loginData, [e.target.name]: e.target.value })
-    }
+    // Formik handles login input changes
 
     const handleRegisterChange = (e) => {
         const { name, files, value } = e.target
@@ -251,7 +236,7 @@ const LoginRegister = () => {
                                 {/* Tab Content */}
                                 <div className="card-body p-5">
                                     {activeTab === 'login' ? (
-                                        <form onSubmit={handleLoginSubmit} className="needs-validation" noValidate>
+                                        <form onSubmit={formikLogin.handleSubmit} className="needs-validation" noValidate>
                                             <div className="text-center mb-4">
                                                 <h2 className="fw-bold" style={{color: 'var(--emerald-700)'}}>Welcome Back</h2>
                                                 <p className="text-muted">Sign in to your account</p>
@@ -266,8 +251,9 @@ const LoginRegister = () => {
                                                     id="login_email"
                                                     name="email"
                                                     className="form-control form-control-lg"
-                                                    value={loginData.email}
-                                                    onChange={handleLoginChange}
+                                                    value={formikLogin.values.email}
+                                                    onChange={formikLogin.handleChange}
+                                                    onBlur={formikLogin.handleBlur}
                                                     required
                                                     placeholder="Enter your email"
                                                     style={{
@@ -277,9 +263,10 @@ const LoginRegister = () => {
                                                         transition: 'all 0.3s ease'
                                                     }}
                                                     onFocus={(e) => e.target.style.borderColor = 'var(--emerald-500)'}
-                                                    onBlur={(e) => e.target.style.borderColor = 'var(--emerald-200)'}
                                                 />
-                                                {loginErrors.email && <small className="text-danger">{loginErrors.email}</small>}
+                                                {formikLogin.touched.email && formikLogin.errors.email && (
+                                                    <small className="text-danger">{formikLogin.errors.email}</small>
+                                                )}
                                             </div>
 
                                             <div className="mb-4">
@@ -291,8 +278,9 @@ const LoginRegister = () => {
                                                     id="login_password"
                                                     name="password"
                                                     className="form-control form-control-lg"
-                                                    value={loginData.password}
-                                                    onChange={handleLoginChange}
+                                                    value={formikLogin.values.password}
+                                                    onChange={formikLogin.handleChange}
+                                                    onBlur={formikLogin.handleBlur}
                                                     required
                                                     placeholder="Enter your password"
                                                     style={{
@@ -302,9 +290,10 @@ const LoginRegister = () => {
                                                         transition: 'all 0.3s ease'
                                                     }}
                                                     onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-                                                    onBlur={(e) => e.target.style.borderColor = 'rgba(var(--primary-rgb), 0.2)'}
                                                 />
-                                                {loginErrors.password && <small className="text-danger">{loginErrors.password}</small>}
+                                                {formikLogin.touched.password && formikLogin.errors.password && (
+                                                    <small className="text-danger">{formikLogin.errors.password}</small>
+                                                )}
                                             </div>
 
                                             <div className="d-flex justify-content-end align-items-center mb-4">
@@ -323,7 +312,7 @@ const LoginRegister = () => {
                                             <button
                                                 type="submit"
                                                 className="btn btn-lg w-100 fw-semibold mb-3"
-                                                disabled={loading}
+                                                disabled={loading || formikLogin.isSubmitting}
                                                 style={{
                                                     background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                                                     border: 'none',

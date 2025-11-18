@@ -25,6 +25,9 @@ const Home = () => {
     const perPage = 8
     const [visibleCount, setVisibleCount] = useState(perPage)
     const sentinelRef = useRef(null)
+    // Section refs for smooth scroll
+    const featuredSectionRef = useRef(null)
+    const allProductsSectionRef = useRef(null)
 
     // Newsletter (MUI components)
     const [newsletterEmail, setNewsletterEmail] = useState('')
@@ -111,6 +114,15 @@ const Home = () => {
         setNewsletterEmail('')
     }
 
+    // Smooth scroll helper accounting for fixed header
+    const scrollToSection = (ref) => {
+        if (!ref?.current) return
+        const headerOffset = 80 // approximate navbar height
+        const elementPosition = ref.current.getBoundingClientRect().top + window.pageYOffset
+        const offsetPosition = Math.max(0, elementPosition - headerOffset)
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' })
+    }
+
     // Fallback images for products (high-quality hair product images)
     const fallbackImages = {
         'Shampoo': 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=400&fit=crop',
@@ -191,9 +203,9 @@ const Home = () => {
                             </p>
                             
                             <div className="d-flex flex-column flex-sm-row gap-3 mb-5">
-                                <Link 
-                                    to="/search" 
-                                    className="btn btn-lg px-5 py-3 fw-semibold position-relative overflow-hidden" 
+                                <a
+                                    href="/shop"
+                                    className="btn btn-lg px-5 py-3 fw-semibold position-relative overflow-hidden"
                                     style={{
                                         background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
                                         border: 'none',
@@ -203,26 +215,12 @@ const Home = () => {
                                         transition: 'all 0.3s ease',
                                         boxShadow: '0 8px 25px rgba(var(--primary-rgb), 0.3)'
                                     }}
-                                    onClick={(e) => handleGuestRedirection(e, '/search')}
                                 >
                                     <span className="d-flex align-items-center">
-                                        Shop Collection 
-                                        <i className="fa fa-arrow-right ms-2" style={{transition: 'transform 0.3s ease'}}/>
+                                        Shop Collection
+                                        <i className="fa fa-arrow-right ms-2" style={{ transition: 'transform 0.3s ease' }} />
                                     </span>
-                                </Link>
-                                <Link 
-                                    to="/search" 
-                                    className="btn btn-outline-primary btn-lg px-5 py-3 fw-semibold" 
-                                    style={{
-                                        borderRadius: '12px',
-                                        borderWidth: '2px',
-                                        color: 'var(--primary)',
-                                        transition: 'all 0.3s ease'
-                                    }}
-                                    onClick={(e) => handleGuestRedirection(e, '/search')}
-                                >
-                                    Browse Products
-                                </Link>
+                                </a>
                             </div>
                             
                             {/* Trust Indicators */}
@@ -402,7 +400,7 @@ const Home = () => {
             </section>
 
             {/* Featured Products Section */}
-            <section className="py-5" style={{
+            <section id="featured-products" ref={featuredSectionRef} className="py-5" style={{
                 background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%)',
                 minHeight: '80vh'
             }}>
@@ -658,7 +656,7 @@ const Home = () => {
             </section>
 
             {isAuthenticated && (
-            <section className="py-5" style={{ background: '#ffffff' }}>
+            <section id="all-products" ref={allProductsSectionRef} className="py-5" style={{ background: '#ffffff' }}>
                 <div className="container">
                     <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
                         <h3 className="fw-bold mb-3 mb-md-0">All Products</h3>

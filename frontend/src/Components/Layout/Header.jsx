@@ -28,7 +28,7 @@ const Header = ({cartItems}) => {
             {/* Top banner removed per request */}
 
             {/* Navbar */}
-            <nav className="navbar navbar-expand-lg navbar-dark bg-primary-dark">
+            <nav className="navbar navbar-expand-lg navbar-dark bg-primary-dark header-bar">
                 <div className="container-fluid">
                     <Link className="navbar-brand d-flex align-items-center" to="/">
                         <span className="brand-text">Nourishy</span>
@@ -39,17 +39,17 @@ const Header = ({cartItems}) => {
                     </button>
 
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                        <ul className="navbar-nav header-nav me-auto mb-2 mb-lg-0">
                             <li className="nav-item">
                                 {/* UI Showcase removed per Unit 2 requirement */}
                             </li>
                             {!isOnAuthPage && isAuthenticated && (
                                 <>
                                     <li className="nav-item">
-                                        <Link className="nav-link" to="/">Home</Link>
+                                        <Link className="nav-link header-link" to="/">Home</Link>
                                     </li>
                                     <li className="nav-item">
-                                        <Link className="nav-link" to="/shop">Shop</Link>
+                                        <Link className="nav-link header-link" to="/shop">Shop</Link>
                                     </li>
 
                                     {/* Orders moved to user dropdown; removed from top nav */}
@@ -71,7 +71,7 @@ const Header = ({cartItems}) => {
                         </ul>
 
                         {!isOnAuthPage && (
-                            <div className="d-flex align-items-center gap-2">
+                            <div className="d-flex align-items-center header-actions gap-2">
                                 {isAuthenticated && user ? (
                                     <div className="dropdown user-menu">
                                         <button className="btn user-menu-toggle dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
@@ -129,11 +129,11 @@ const Header = ({cartItems}) => {
                                     </div>
                                 ) : (
                                     <div className="d-flex gap-2">
-                                        <Link to="/loginregister" className="btn btn-outline-light">
+                                        <Link to="/loginregister" className="header-btn header-btn-outline">
                                             <i className="fas fa-sign-in-alt me-1"></i>
                                             Login
                                         </Link>
-                                        <Link to="/register" className="btn btn-primary">
+                                        <Link to="/register" className="header-btn header-btn-primary">
                                             <i className="fas fa-user-plus me-1"></i>
                                             Register
                                         </Link>
@@ -141,9 +141,10 @@ const Header = ({cartItems}) => {
                                 )}
 
                                 {isAuthenticated && (
-                                    <Link to="/ordercart" className="btn btn-warning">
-                                        <span id="cart" className="me-2">Cart</span>
-                                        <span className="badge bg-dark" id="cart_count">{cartItems ? cartItems.length : 0}</span>
+                                    <Link to="/ordercart" className="cart-btn">
+                                        <i className="fas fa-shopping-cart me-2"></i>
+                                        <span id="cart">Cart</span>
+                                        <span className="cart-count" id="cart_count">{cartItems ? cartItems.length : 0}</span>
                                     </Link>
                                 )}
                             </div>

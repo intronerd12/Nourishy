@@ -31,6 +31,11 @@ exports.isAuthenticatedUser = async (req, res, next) => {
             user = await User.findOne({ email: decoded.email });
         }
 
+        // If user exists but is deactivated, block access
+        if (user && user.isActive === false) {
+            return res.status(403).json({ success: false, message: 'Your account has been deactivated. Please contact support.' });
+        }
+
         if (!user) {
             // Provision user record on first authenticated request
             const defaultAvatar = {

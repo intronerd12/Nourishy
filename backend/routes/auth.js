@@ -7,6 +7,7 @@ const {
     logout,
     getUserProfile,
     updateProfile,
+    updatePassword,
     createAdmin,
     verifyEmail,
     resendEmailVerification,
@@ -23,6 +24,7 @@ router.route('/login').post(loginUser);
 router.route('/logout').post(logout);
 router.route('/me').get(isAuthenticatedUser, getUserProfile);
 router.route('/me/update').put(isAuthenticatedUser, upload.single('avatar'), updateProfile);
+router.route('/password/update').put(isAuthenticatedUser, updatePassword);
 
 // Email verification routes
 router.route('/verify-email/:token').get(verifyEmail);

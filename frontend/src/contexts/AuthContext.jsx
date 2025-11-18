@@ -192,6 +192,10 @@ export const AuthProvider = ({ children }) => {
             toast.success('Login successful!');
             return { success: true, user: data.user };
         } catch (error) {
+            // If backend rejects due to deactivated account, sign out from Firebase
+            if (error?.response?.status === 403) {
+                try { await signOut(auth); } catch (_) {}
+            }
             const message = error.response?.data?.message || friendlyAuthError(error);
             dispatch({ type: 'LOGIN_FAIL', payload: message });
             toast.error(message);
