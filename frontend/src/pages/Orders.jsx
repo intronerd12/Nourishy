@@ -58,8 +58,10 @@ const Orders = () => {
                     paymentMethod: order.paymentInfo?.status === 'succeeded' ? 'Card Payment' : 'Cash on Delivery'
                 }))
                 
+                // Hydrate current product images from Cloudinary to keep consistent with homepage/admin
+                const withImages = await hydrateProductImages(mappedOrders)
                 // Hydrate review status per product for the current user
-                const hydrated = await hydrateReviewStatus(mappedOrders)
+                const hydrated = await hydrateReviewStatus(withImages)
                 setOrders(hydrated)
             } else {
                 setError('Failed to fetch orders')
@@ -71,6 +73,37 @@ const Orders = () => {
             setError(error.response?.data?.message || 'Failed to fetch orders')
             setLoading(false)
             toast.error(error.response?.data?.message || 'Failed to fetch orders')
+        }
+    }
+
+    // Ensure item images match the latest product image (Cloudinary) used across the site
+    const hydrateProductImages = async (ordersList) => {
+        try {
+            const productIds = Array.from(new Set(
+                ordersList.flatMap(o => (o.items || []).map(i => i.productId)).filter(Boolean)
+            ))
+
+            const imageMap = {}
+            await Promise.all(productIds.map(async (pid) => {
+                try {
+                    const { data } = await axios.get(`/product/${pid}`)
+                    const imgs = data?.product?.images || []
+                    const url = imgs.length > 0 ? imgs[0].url : ''
+                    if (url) imageMap[pid] = url
+                } catch (_) {
+                    // Leave missing products/images as-is so the placeholder fallback triggers
+                }
+            }))
+
+            return ordersList.map(order => ({
+                ...order,
+                items: (order.items || []).map(item => ({
+                    ...item,
+                    image: imageMap[item.productId] || item.image
+                }))
+            }))
+        } catch (_) {
+            return ordersList
         }
     }
 

@@ -5,7 +5,7 @@
         "description": "Our hydrating shampoo gently cleanses while infusing moisture into dry, damaged hair. Formulated with natural oils and botanical extracts to restore shine and softness.",
         "images": [{
             "public_id": "products/nourishy_shampoo",
-            "url": "https://res.cloudinary.com/demo/image/upload/v1612345678/products/nourishy_shampoo.jpg"
+            "url": "https://images.unsplash.com/photo-1585386959984-a41552231656?w=400&h=400&fit=crop"
         }],
         "category": "Shampoo",
         "seller": "Nourishy",
@@ -19,7 +19,7 @@
         "description": "Deep conditioning treatment that repairs damaged hair and split ends. Enriched with keratin and argan oil to strengthen hair from within.",
         "images": [{
             "public_id": "products/nourishy_conditioner",
-            "url": "https://res.cloudinary.com/demo/image/upload/v1612345679/products/nourishy_conditioner.jpg"
+            "url": "https://images.unsplash.com/photo-1596461404969-9ae70b1f86d3?w=400&h=400&fit=crop"
         }],
         "category": "Conditioner",
         "seller": "Nourishy",
@@ -33,7 +33,7 @@
         "description": "Luxurious hair oil that tames frizz and adds brilliant shine. Made with 100% pure argan oil to nourish and protect hair from heat damage.",
         "images": [{
             "public_id": "products/nourishy_oil",
-            "url": "https://res.cloudinary.com/demo/image/upload/v1612345680/products/nourishy_oil.jpg"
+            "url": "https://images.unsplash.com/photo-1556228453-efd1f0c1f0cf?w=400&h=400&fit=crop"
         }],
         "category": "Hair Oil",
         "seller": "Nourishy",
@@ -47,7 +47,7 @@
         "description": "Weekly treatment mask that deeply conditions and restores severely damaged hair. Contains shea butter and coconut oil for maximum hydration.",
         "images": [{
             "public_id": "products/nourishy_mask",
-            "url": "https://res.cloudinary.com/demo/image/upload/v1612345681/products/nourishy_mask.jpg"
+            "url": "https://images.unsplash.com/photo-1585386959984-a41552231656?w=400&h=400&fit=crop"
         }],
         "category": "Hair Mask",
         "seller": "Nourishy",
@@ -61,7 +61,7 @@
         "description": "Lightweight serum that eliminates frizz and adds silky smoothness. Perfect for all hair types, especially curly and wavy hair.",
         "images": [{
             "public_id": "products/nourishy_serum",
-            "url": "https://res.cloudinary.com/demo/image/upload/v1612345682/products/nourishy_serum.jpg"
+            "url": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop"
         }],
         "category": "Hair Serum",
         "seller": "Nourishy",

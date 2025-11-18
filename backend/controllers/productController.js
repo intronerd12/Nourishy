@@ -343,8 +343,9 @@ exports.getProductReviews = async (req, res) => {
         const { productId } = req.query || {};
         if (!productId) return res.status(400).json({ success: false, message: 'productId query is required' });
         const product = await Product.findById(productId).select('name reviews ratings numOfReviews');
-        if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-        return res.status(200).json({ success: true, product });
+        // Return 200 with exists=false instead of 404 to avoid noisy errors in clients
+        if (!product) return res.status(200).json({ success: true, exists: false, product: null, message: 'Product not found' });
+        return res.status(200).json({ success: true, exists: true, product });
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
     }

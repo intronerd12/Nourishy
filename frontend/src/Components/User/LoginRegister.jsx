@@ -20,8 +20,10 @@ const LoginRegister = () => {
     const [registerData, setRegisterData] = useState({
         name: '',
         email: '',
-        password: ''
+        password: '',
+        avatar: ''
     })
+    const [avatarPreview, setAvatarPreview] = useState('/images/default_avatar.jpg')
     const [registerErrors, setRegisterErrors] = useState({})
 
     const loginSchema = Yup.object().shape({
@@ -32,7 +34,8 @@ const LoginRegister = () => {
     const registerSchema = Yup.object().shape({
         name: Yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
         email: Yup.string().trim().email('Enter a valid email').required('Email is required'),
-        password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required')
+        password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+        avatar: Yup.string().required('Avatar image is required')
     })
 
     const [activeTab, setActiveTab] = useState('login')
@@ -110,7 +113,8 @@ const LoginRegister = () => {
         const userData = {
             name: registerData.name,
             email: registerData.email,
-            password: registerData.password
+            password: registerData.password,
+            avatar: registerData.avatar
         }
 
         const result = await register(userData)
@@ -125,7 +129,19 @@ const LoginRegister = () => {
     }
 
     const handleRegisterChange = (e) => {
-        setRegisterData({ ...registerData, [e.target.name]: e.target.value })
+        const { name, files, value } = e.target
+        if (name === 'avatar' && files && files[0]) {
+            const reader = new FileReader()
+            reader.onload = () => {
+                if (reader.readyState === 2) {
+                    setAvatarPreview(reader.result)
+                    setRegisterData(prev => ({ ...prev, avatar: reader.result }))
+                }
+            }
+            reader.readAsDataURL(files[0])
+        } else {
+            setRegisterData({ ...registerData, [name]: value })
+        }
     }
 
     useEffect(() => {
@@ -463,6 +479,35 @@ const LoginRegister = () => {
                                                     Password should be at least 6 characters long
                                                 </small>
                                                 {registerErrors.password && <small className="text-danger d-block">{registerErrors.password}</small>}
+                                            </div>
+
+                                            <div className="mb-4">
+                                                <label htmlFor="register_avatar" className="form-label fw-semibold mb-2" style={{color: 'var(--emerald-700)'}}>
+                                                    <i className="fas fa-image me-2"></i>Avatar
+                                                </label>
+                                                <div className="d-flex align-items-center">
+                                                    <div className="me-3">
+                                                        <figure className="avatar">
+                                                            <img src={avatarPreview} alt="Avatar Preview" className="rounded-circle" style={{ width: '64px', height: '64px', objectFit: 'cover' }} />
+                                                        </figure>
+                                                    </div>
+                                                    <input
+                                                        type="file"
+                                                        id="register_avatar"
+                                                        name="avatar"
+                                                        className="form-control"
+                                                        accept="image/*"
+                                                        onChange={handleRegisterChange}
+                                                        required
+                                                        style={{
+                                                            borderRadius: '0.75rem',
+                                                            border: '2px solid var(--emerald-200)',
+                                                            padding: '0.5rem',
+                                                            transition: 'all 0.3s ease'
+                                                        }}
+                                                    />
+                                                </div>
+                                                {registerErrors.avatar && <small className="text-danger d-block">{registerErrors.avatar}</small>}
                                             </div>
 
                                             <button

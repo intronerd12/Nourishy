@@ -35,6 +35,12 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
         return fallbackImages[product.category] || fallbackImages['Shampoo']
     }
 
+    const goToNextImage = () => {
+        const total = Array.isArray(product.images) ? product.images.length : 0;
+        if (total <= 1) return;
+        setSelectedImageIndex((prev) => (prev + 1) % total);
+    }
+
     const increaseQty = () => {
         if (quantity >= product.stock) return;
         setQuantity(quantity + 1)
@@ -169,24 +175,7 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
         <>
             <MetaData title={product.name} />
             
-            {/* Breadcrumb Navigation */}
-            <div className="container-fluid bg-light py-3">
-                <div className="container">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb mb-0">
-                            <li className="breadcrumb-item">
-                                <Link to="/" className="text-decoration-none">Home</Link>
-                            </li>
-                            <li className="breadcrumb-item">
-                                <Link to="/search" className="text-decoration-none">Shop</Link>
-                            </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                {product.name}
-                            </li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
+            {/* Breadcrumb Navigation removed as requested */}
 
             <div className="container-fluid py-5" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%)' }}>
                 <div className="container">
@@ -242,6 +231,27 @@ const ProductDetails = ({ addItemToCart, cartItems }) => {
                                     >
                                         <i className={`fas fa-heart`}></i>
                                     </button>
+
+                                    {/* Next Image Button */}
+                                    {product.images && product.images.length > 1 && (
+                                        <button
+                                            aria-label="Next product image"
+                                            onClick={goToNextImage}
+                                            className="btn btn-light"
+                                            style={{
+                                                position: 'absolute',
+                                                bottom: '1rem',
+                                                right: '1rem',
+                                                borderRadius: '999px',
+                                                background: 'rgba(255,255,255,0.9)',
+                                                border: '1px solid #e5e7eb',
+                                                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                                padding: '0.5rem 0.85rem'
+                                            }}
+                                        >
+                                            <i className="fas fa-chevron-right" style={{ color: '#111827' }}></i>
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Thumbnail Images */}

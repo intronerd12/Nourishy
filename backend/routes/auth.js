@@ -18,7 +18,7 @@ const { authorizeRoles } = require('../middlewares/auth');
 const { upload } = require('../middlewares/upload');
 const { getAllUsers, updateUserRole, deleteUser, updateUserStatus } = require('../controllers/authController');
 
-router.route('/register').post(registerUser);
+router.route('/register').post(upload.single('avatar'), registerUser);
 router.route('/login').post(loginUser);
 router.route('/logout').post(logout);
 router.route('/me').get(isAuthenticatedUser, getUserProfile);

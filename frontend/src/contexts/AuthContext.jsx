@@ -143,6 +143,27 @@ export const AuthProvider = ({ children }) => {
 
             const idToken = await cred.user.getIdToken();
             axios.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+            // If avatar is provided, update profile on backend to store in Cloudinary
+            try {
+                if (userData.avatar) {
+                    await axios.put('/me/update', {
+                        name: userData.name,
+                        email: userData.email,
+                        avatar: userData.avatar
+                    });
+                } else {
+                    // Still ensure name/email sync
+                    await axios.put('/me/update', {
+                        name: userData.name,
+                        email: userData.email
+                    });
+                }
+            } catch (updateErr) {
+                // Continue, but inform user if avatar update failed
+                const msg = updateErr.response?.data?.message || 'Profile update failed';
+                toast.error(msg);
+            }
+
             const { data } = await axios.get('/me');
 
             dispatch({ type: 'REGISTER_SUCCESS', payload: data.user });

@@ -75,15 +75,23 @@ const Header = ({cartItems}) => {
                                 {isAuthenticated && user ? (
                                     <div className="dropdown user-menu">
                                         <button className="btn user-menu-toggle dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span className="user-avatar">
-                                                {(user?.name || 'U').charAt(0).toUpperCase()}
+                                            <span className="user-avatar" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <img 
+                                                    src={user?.avatar?.url || '/images/default_avatar.jpg'}
+                                                    alt={user?.name || 'User'}
+                                                    style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
+                                                />
                                             </span>
                                             <span className="user-label">{user?.name || 'User'}</span>
                                         </button>
                                         <ul className="dropdown-menu dropdown-menu-end user-menu-dropdown" aria-labelledby="userMenu">
                                             <li className="user-menu-header">
-                                                <span className="user-avatar small">
-                                                    {(user?.name || 'U').charAt(0).toUpperCase()}
+                                                <span className="user-avatar small" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <img 
+                                                        src={user?.avatar?.url || '/images/default_avatar.jpg'}
+                                                        alt={user?.name || 'User'}
+                                                        style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }}
+                                                    />
                                                 </span>
                                                 <div className="d-flex flex-column">
                                                     <strong className="name">{user?.name || 'User'}</strong>

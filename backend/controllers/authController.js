@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendEmail } = require('../config/email');
 const { getAdminAuth } = require('../config/firebaseAdmin');
+const { cloudinary } = require('../config/cloudinary');
 
 // Helper function to send token response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -36,35 +37,54 @@ const sendTokenResponse = (user, statusCode, res) => {
 // Register user => /api/v1/register
 exports.registerUser = async (req, res, next) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, avatar: avatarBody } = req.body;
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'User already exists with this email'
-            });
+            return res.status(400).json({ success: false, message: 'User already exists with this email' });
         }
 
-        // Create default avatar
-        const defaultAvatar = {
-            public_id: 'default_avatar',
-            url: 'https://res.cloudinary.com/dkqnaqbvg/image/upload/v1/default_avatar.png'
-        };
+        // Require an avatar to be provided (either file upload or base64 string)
+        let uploadedAvatar = null;
+        try {
+            if (req.file) {
+                uploadedAvatar = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'avatars',
+                    resource_type: 'image',
+                    transformation: [{ width: 300, height: 300, crop: 'fill' }]
+                });
+            } else if (typeof avatarBody === 'string' && avatarBody.trim() !== '') {
+                // Accept data URL/base64 avatar directly
+                uploadedAvatar = await cloudinary.uploader.upload(avatarBody, {
+                    folder: 'avatars',
+                    resource_type: 'image',
+                    transformation: [{ width: 300, height: 300, crop: 'fill' }]
+                });
+            }
+        } catch (uploadErr) {
+            return res.status(500).json({ success: false, message: 'Avatar upload failed', error: uploadErr?.message });
+        }
+
+        if (!uploadedAvatar) {
+            return res.status(400).json({ success: false, message: 'Avatar image is required for registration' });
+        }
 
         const user = await User.create({
             name,
             email,
             password,
-            avatar: defaultAvatar
+            avatar: {
+                public_id: uploadedAvatar.public_id,
+                url: uploadedAvatar.secure_url || uploadedAvatar.url
+            }
         });
 
         // Generate email verification token
         const verificationToken = user.getEmailVerificationToken();
         await user.save({ validateBeforeSave: false });
 
-        // Create verification URL - point to frontend
+        // Create verification URL (backend path redirects to frontend)
         const verificationUrl = `${req.protocol}://${req.get('host')}/api/v1/verify-email/${verificationToken}`;
 
         const message = `
@@ -79,35 +99,20 @@ exports.registerUser = async (req, res, next) => {
         `;
 
         try {
-            await sendEmail({
-                email: user.email,
-                subject: 'Nourishy - Email Verification',
-                html: message
-            });
-
-            res.status(201).json({
-                success: true,
-                message: 'registered successful please check email for verefication'
-            });
+            await sendEmail({ email: user.email, subject: 'Nourishy - Email Verification', html: message });
+            res.status(201).json({ success: true, message: 'registered successful please check email for verefication' });
         } catch (error) {
             user.emailVerificationToken = undefined;
             user.emailVerificationExpire = undefined;
             await user.save({ validateBeforeSave: false });
-
-            return res.status(500).json({
-                success: false,
-                message: 'Email could not be sent. Please try again later.'
-            });
+            return res.status(500).json({ success: false, message: 'Email could not be sent. Please try again later.' });
         }
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
-const { cloudinary } = require('../config/cloudinary');
+// cloudinary imported at top
 
 // Update user profile => /api/v1/me/update
 exports.updateProfile = async (req, res, next) => {

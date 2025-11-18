@@ -56,16 +56,6 @@ const Profile = () => {
                         <div className="container position-relative" style={{zIndex: 2}}>
                             <div className="row align-items-center py-5">
                                 <div className="col-12 text-center">
-                                    <div className="mb-4">
-                                        <span className="badge rounded-pill px-4 py-2 fw-medium" style={{
-                                            background: 'linear-gradient(45deg, var(--emerald-500), var(--emerald-600))',
-                                            color: 'white',
-                                            fontSize: '0.875rem',
-                                            letterSpacing: '0.5px'
-                                        }}>
-                                            ✨ Your Nourishy Profile
-                                        </span>
-                                    </div>
                                     
                                     <h1 className="display-4 fw-bold mb-3" style={{
                                         lineHeight: '1.1',

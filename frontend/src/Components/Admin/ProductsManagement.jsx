@@ -210,6 +210,26 @@ const ProductsManagement = () => {
         setDeleteDialogOpen(true);
     };
 
+    const openAddNew = () => {
+        // Initialize modal for creating a new product
+        setEditingProduct(null);
+        setFormData({
+            name: '',
+            price: '',
+            description: '',
+            category: '',
+            stock: '',
+            brand: '',
+            featured: false
+        });
+        try { imagePreviews.forEach((p) => p?.url && URL.revokeObjectURL(p.url)); } catch (_) {}
+        setImages([]);
+        setImagePreviews([]);
+        setClearExistingImages(false);
+        setRemovedExisting([]);
+        setShowAddForm(true);
+    };
+
     const resetForm = () => {
         setFormData({
             name: '',
@@ -372,6 +392,9 @@ const ProductsManagement = () => {
                 <div className="card-header d-flex align-items-center justify-content-between">
                     <h2 className="card-title">Products Management</h2>
                     <div>
+                        <Button variant="contained" sx={{ mr: 1 }} onClick={openAddNew}>
+                            Add Product
+                        </Button>
                         <Button variant="outlined" color="error" sx={{ ml: 1 }} onClick={openDeleteBulk}>
                             Delete Selected
                         </Button>
