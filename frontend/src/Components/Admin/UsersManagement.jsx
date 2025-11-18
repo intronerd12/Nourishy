@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Modal, Button, Badge } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
+import { auth } from '../../utils/firebase';
 
 const UsersManagement = () => {
     const [users, setUsers] = useState([]);
@@ -14,6 +15,8 @@ const UsersManagement = () => {
     const [updatingRole, setUpdatingRole] = useState({}); // { [userId]: boolean }
     const [updatingStatus, setUpdatingStatus] = useState({}); // { [userId]: boolean }
     const [deletingUser, setDeletingUser] = useState({}); // { [userId]: boolean }
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null); // { _id, name, email, avatar }
     const { isAuthenticated, loading: authLoading } = useAuth();
 
     useEffect(() => {
@@ -22,9 +25,18 @@ const UsersManagement = () => {
         }
     }, [isAuthenticated, authLoading]);
 
+    const getAuthConfig = async () => {
+        try {
+            const token = await auth.currentUser?.getIdToken(true);
+            if (token) return { headers: { Authorization: `Bearer ${token}` } };
+        } catch (_) {}
+        return {};
+    };
+
     const fetchUsers = async () => {
         try {
-            const { data } = await axios.get(`/admin/users`);
+            const config = await getAuthConfig();
+            const { data } = await axios.get(`/admin/users`, config);
             setUsers(data.users || []);
             setLoading(false);
         } catch (error) {
@@ -37,7 +49,8 @@ const UsersManagement = () => {
     const handleRoleChange = async (userId, newRole) => {
         try {
             setUpdatingRole(prev => ({ ...prev, [userId]: true }));
-            const config = { headers: { 'Content-Type': 'application/json' } };
+            const authCfg = await getAuthConfig();
+            const config = { headers: { ...(authCfg.headers || {}), 'Content-Type': 'application/json' } };
 
             await axios.put(`/admin/user/${userId}`, { role: newRole }, config);
             // Re-sync with server to reflect DB state
@@ -52,27 +65,39 @@ const UsersManagement = () => {
         }
     };
 
-    const handleDeleteUser = async (userId) => {
-        if (window.confirm('Are you sure you want to delete this user?')) {
-            try {
-                setDeletingUser(prev => ({ ...prev, [userId]: true }));
-                await axios.delete(`/admin/user/${userId}`);
-                // Re-sync with server to reflect DB state
-                await fetchUsers();
-                toast.success('User deleted successfully');
-            } catch (error) {
-                const msg = error.response?.data?.message || 'Failed to delete user';
-                toast.error(msg);
-            } finally {
-                setDeletingUser(prev => ({ ...prev, [userId]: false }));
-            }
+    const openDeleteModal = (user) => {
+        setDeleteTarget(user);
+        setShowDeleteModal(true);
+    };
+
+    const closeDeleteModal = () => {
+        setShowDeleteModal(false);
+        setDeleteTarget(null);
+    };
+
+    const confirmDeleteUser = async () => {
+        if (!deleteTarget?._id) return;
+        const userId = deleteTarget._id;
+        try {
+            setDeletingUser(prev => ({ ...prev, [userId]: true }));
+            const config = await getAuthConfig();
+            await axios.delete(`/admin/user/${userId}`, config);
+            await fetchUsers();
+            toast.success('User deleted successfully');
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Failed to delete user';
+            toast.error(msg);
+        } finally {
+            setDeletingUser(prev => ({ ...prev, [userId]: false }));
+            closeDeleteModal();
         }
     };
 
     const handleToggleActive = async (userId, nextActive) => {
         try {
             setUpdatingStatus(prev => ({ ...prev, [userId]: true }));
-            const config = { headers: { 'Content-Type': 'application/json' } };
+            const authCfg = await getAuthConfig();
+            const config = { headers: { ...(authCfg.headers || {}), 'Content-Type': 'application/json' } };
             await axios.put(`/admin/user/${userId}/status`, { isActive: nextActive }, config);
             await fetchUsers();
             toast.success(`User ${nextActive ? 'activated' : 'deactivated'}`);
@@ -291,7 +316,7 @@ const UsersManagement = () => {
                                                 </button>
                                                 <button 
                                                     className="btn btn-sm btn-danger"
-                                                    onClick={() => handleDeleteUser(user._id)}
+                                                    onClick={() => openDeleteModal(user)}
                                                     disabled={user.role === 'admin' || !!deletingUser[user._id]}
                                                     title="Delete User"
                                                 >
@@ -389,6 +414,38 @@ const UsersManagement = () => {
                     <Button variant="secondary" onClick={closeUserModal}>
                         Close
                     </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={closeDeleteModal} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Delete User</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {deleteTarget && (
+                        <div className="d-flex flex-column gap-3">
+                            <div className="d-flex align-items-center gap-3">
+                                <img
+                                    src={deleteTarget.avatar?.url || 'https://via.placeholder.com/64'}
+                                    alt={deleteTarget.name}
+                                    style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }}
+                                />
+                                <div>
+                                    <div className="fw-semibold" style={{ fontSize: '1.05rem' }}>{deleteTarget.name}</div>
+                                    <div className="text-muted small">{deleteTarget.email}</div>
+                                </div>
+                            </div>
+
+                            <div className="alert alert-warning mb-0" role="alert">
+                                This action is permanent and cannot be undone.
+                            </div>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeDeleteModal}>Cancel</Button>
+                    <Button variant="danger" onClick={confirmDeleteUser} disabled={!!deletingUser[deleteTarget?._id]}>Delete</Button>
                 </Modal.Footer>
             </Modal>
         </div>

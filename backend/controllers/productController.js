@@ -195,7 +195,9 @@ try {
     Filter = class {
         constructor() {
             this.words = [
-                'fuck','shit','bitch','asshole','cunt','slut','whore','bastard','dick','pussy','cock','prick','twat','wank','jerk','retard','faggot','nigger','motherfucker','bullshit'
+                'fuck','shit','bitch','asshole','cunt','slut','whore','bastard','dick','pussy','cock','prick','twat','wank','jerk','retard','faggot','nigger','niger','motherfucker','bullshit',
+                // Tagalog/Filipino
+                'tangina','puta','putcha','pucha','tite','bilat','burat','putangina','putang ina','tanga','amp','amputa'
             ];
         }
         clean(text = '') {
@@ -214,7 +216,9 @@ const profanityFilter = new Filter()
 try {
     if (typeof profanityFilter.addWords === 'function') {
         profanityFilter.addWords(
-            'cunt','slut','whore','bastard','dick','pussy','cock','prick','twat','wank','jerk','retard','faggot','nigger','motherfucker','bullshit',
+            'cunt','slut','whore','bastard','dick','pussy','cock','prick','twat','wank','jerk','retard','faggot','nigger','niger','motherfucker','bullshit',
+            // Tagalog/Filipino
+            'tangina','puta','putcha','pucha','tite','bilat','burat','putangina','putang ina',
             // common near-misses
             'fck','fuk','fuq','bi7ch','b1tch','a55','sh1t'
         );
@@ -229,7 +233,9 @@ const LEET_MAP = {
 };
 
 const BASE_BAD_WORDS = [
-    'fuck','shit','bitch','asshole','cunt','slut','whore','bastard','dick','pussy','cock','prick','twat','wank','jerk','retard','faggot','nigger','motherfucker','bullshit'
+    'fuck','shit','bitch','asshole','cunt','slut','whore','bastard','dick','pussy','cock','prick','twat','wank','jerk','retard','faggot','nigger','niger','motherfucker','bullshit',
+    // Tagalog/Filipino
+    'tangina','puta','putcha','pucha','tite','bilat','burat','putangina','putang ina'
 ];
 
 function buildObfuscatedRegex(word) {

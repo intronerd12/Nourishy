@@ -9,7 +9,7 @@ import ReviewsManagement from './ReviewsManagement';
 import ErrorBoundary from '../Common/ErrorBoundary';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/logo.svg';
-import './Dashboard.css';
+import '../../styles/Dashboard.css';
 
 const Dashboard = () => {
     const { user, logout } = useAuth();
